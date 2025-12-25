@@ -7,7 +7,8 @@ import {
   Lightbulb,
   type LucideIcon,
 } from "lucide-react";
-import { useClusters, useIngestEvents } from "@/hooks/useClusters";
+import { useClusters } from "@/hooks/useClusters";
+import { useIngestEvents } from "@/hooks/useIngest";
 
 interface StatCardProps {
   label: string;
