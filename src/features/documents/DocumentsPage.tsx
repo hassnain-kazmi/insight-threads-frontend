@@ -1,6 +1,21 @@
-import { FileText, Filter } from "lucide-react";
+import { useState } from "react";
+import { Filter } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DocumentFiltersPanel } from "@/components/documents/DocumentFilters";
+import { DocumentsTable } from "@/components/documents/DocumentsTable";
+import { DocumentDetailDrawer } from "@/components/documents/DocumentDetailDrawer";
+import type { DocumentFilters } from "@/types/api";
 
 export const DocumentsPage = () => {
+  const [filters, setFilters] = useState<DocumentFilters>({
+    limit: 50,
+    offset: 0,
+  });
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
+    null
+  );
+  const [showFilters, setShowFilters] = useState(true);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -10,25 +25,35 @@ export const DocumentsPage = () => {
             Browse and filter your ingested documents.
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-accent transition-colors">
+        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
           <Filter className="w-4 h-4" />
-          Filters
-        </button>
+          {showFilters ? "Hide" : "Show"} Filters
+        </Button>
       </div>
 
-      <div className="bg-card border border-border rounded-xl">
-        <div className="p-8 text-center">
-          <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-            <FileText className="w-8 h-8 text-muted-foreground" />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {showFilters && (
+          <div className="lg:col-span-1">
+            <DocumentFiltersPanel
+              filters={filters}
+              onFiltersChange={setFilters}
+            />
           </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">
-            No documents found
-          </h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Documents will appear here after you trigger an ingestion job.
-          </p>
+        )}
+
+        <div className={showFilters ? "lg:col-span-3" : "lg:col-span-4"}>
+          <DocumentsTable
+            filters={filters}
+            onFiltersChange={setFilters}
+            onDocumentClick={setSelectedDocumentId}
+          />
         </div>
       </div>
+
+      <DocumentDetailDrawer
+        documentId={selectedDocumentId}
+        onClose={() => setSelectedDocumentId(null)}
+      />
     </div>
   );
 };
