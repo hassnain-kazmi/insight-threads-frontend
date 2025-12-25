@@ -64,3 +64,49 @@ export interface TriggerIngestionResponse {
   task_id: string;
   status: string;
 }
+
+export interface DocumentSentimentResponse {
+  vader: number | null;
+  distilbert_score: number | null;
+  distilbert_label: string | null;
+  combined_score: number | null;
+}
+
+export interface ClusterMembershipResponse {
+  cluster_id: string;
+  membership_strength: number | null;
+}
+
+export interface DocumentResponse {
+  id: string;
+  user_id: string | null;
+  ingest_event_id: string | null;
+  source_path: string | null;
+  title: string | null;
+  processed: boolean;
+  processed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DocumentDetailResponse extends DocumentResponse {
+  raw_text: string | null;
+  sentiment: DocumentSentimentResponse | null;
+  cluster_memberships: ClusterMembershipResponse[];
+}
+
+export interface DocumentsListResponse {
+  documents: DocumentResponse[];
+  total: number;
+}
+
+export interface DocumentFilters {
+  limit?: number;
+  offset?: number;
+  processed?: boolean;
+  ingest_event_id?: string;
+  cluster_id?: string;
+  source_type?: "rss" | "hackernews" | "github";
+  sentiment_min?: number;
+  sentiment_max?: number;
+}
