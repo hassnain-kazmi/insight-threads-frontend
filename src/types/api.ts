@@ -110,3 +110,66 @@ export interface DocumentFilters {
   sentiment_min?: number;
   sentiment_max?: number;
 }
+
+export interface KeywordResponse {
+  id: string;
+  keyword: string;
+  weight: number | null;
+  created_at: string;
+}
+
+export interface TimeseriesSummaryResponse {
+  id: string;
+  summary_date: string;
+  mention_count: number;
+  avg_sentiment: number | null;
+  momentum: number | null;
+  forecast_lower: number | null;
+  forecast_upper: number | null;
+  created_at: string;
+}
+
+export interface InsightResponse {
+  id: string;
+  cluster_id: string;
+  insight_text: string;
+  confidence: number | null;
+  generated_at: string;
+  llm_metadata: string | null;
+}
+
+export interface AnomalyResponse {
+  id: string;
+  cluster_id: string;
+  anomaly_date: string;
+  score: number;
+  type: string | null;
+  anomaly_metadata: object | null;
+  created_at: string;
+}
+
+export interface ClusterDetailResponse extends ClusterResponse {
+  keywords: KeywordResponse[];
+  timeseries: TimeseriesSummaryResponse[];
+  insights: InsightResponse[];
+  anomalies: AnomalyResponse[];
+}
+
+export interface InsightsListResponse {
+  insights: InsightResponse[];
+  total: number;
+}
+
+export interface AnomaliesListResponse {
+  anomalies: AnomalyResponse[];
+  total: number;
+}
+
+export interface AnomalyFilters {
+  cluster_id?: string;
+  anomaly_type?: string;
+  start_date?: string;
+  end_date?: string;
+  limit?: number;
+  offset?: number;
+}

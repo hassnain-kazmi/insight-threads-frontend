@@ -8,6 +8,7 @@ import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { IngestPage } from "@/features/ingest/IngestPage";
 import { DocumentsPage } from "@/features/documents/DocumentsPage";
 import { ClustersPage } from "@/features/clusters/ClustersPage";
+import { ClusterDetailPage } from "@/features/clusters/ClusterDetailPage";
 import { InsightsPage } from "@/features/insights/InsightsPage";
 import { AnomaliesPage } from "@/features/anomalies/AnomaliesPage";
 import { UmapPage } from "@/features/umap/UmapPage";
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
       {
         path: "clusters",
         element: <ClustersPage />,
+      },
+      {
+        path: "clusters/:id",
+        element: <ClusterDetailPage />,
       },
       {
         path: "insights",
