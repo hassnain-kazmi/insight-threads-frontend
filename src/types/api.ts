@@ -28,3 +28,39 @@ export interface IngestEventsListResponse {
   events: IngestEventResponse[];
   total: number;
 }
+
+export type IngestionSource = "rss" | "hackernews" | "github";
+
+export interface RSSParams {
+  feed_urls: string[];
+  limit?: number;
+}
+
+export interface HackerNewsParams {
+  endpoint?: "topstories" | "newstories" | "beststories";
+  limit?: number;
+}
+
+export interface GitHubParams {
+  owner: string;
+  repo: string;
+  include_commits?: boolean;
+  include_issues?: boolean;
+  include_prs?: boolean;
+  include_releases?: boolean;
+  limit_per_type?: number;
+  commit_since?: string;
+  issue_state?: "open" | "closed" | "all";
+  pr_state?: "open" | "closed" | "all";
+}
+
+export interface TriggerIngestionRequest {
+  source: IngestionSource;
+  source_params: RSSParams | HackerNewsParams | GitHubParams;
+}
+
+export interface TriggerIngestionResponse {
+  ingest_event_id: string;
+  task_id: string;
+  status: string;
+}
