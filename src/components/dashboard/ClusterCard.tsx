@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import type { ClusterResponse } from "@/types/api";
 import { TrendingUp, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getSentimentInfo } from "@/lib/utils";
 
 interface ClusterCardProps {
   cluster: ClusterResponse;
@@ -14,23 +15,8 @@ export const ClusterCard = ({ cluster }: ClusterCardProps) => {
   const trendingPercent = Math.round(trendingScore * 100);
 
   const sentiment = cluster.avg_sentiment;
-  const sentimentVariant =
-    sentiment === null
-      ? "neutral"
-      : sentiment > 0.1
-      ? "positive"
-      : sentiment < -0.1
-      ? "negative"
-      : "neutral";
-
-  const sentimentLabel =
-    sentiment === null
-      ? "Neutral"
-      : sentiment > 0.1
-      ? "Positive"
-      : sentiment < -0.1
-      ? "Negative"
-      : "Neutral";
+  const { variant: sentimentVariant, label: sentimentLabel } =
+    getSentimentInfo(sentiment);
 
   return (
     <Card
