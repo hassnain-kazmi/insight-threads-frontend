@@ -1,6 +1,23 @@
-import { AlertTriangle, Calendar } from "lucide-react";
+import { useState } from "react";
+import { Filter } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AnomalyFiltersPanel } from "@/components/anomalies/AnomalyFilters";
+import { AnomaliesTable } from "@/components/anomalies/AnomaliesTable";
+import type { AnomalyFilters } from "@/types/api";
+import { useNavigate } from "react-router-dom";
 
 export const AnomaliesPage = () => {
+  const navigate = useNavigate();
+  const [filters, setFilters] = useState<AnomalyFilters>({
+    limit: 50,
+    offset: 0,
+  });
+  const [showFilters, setShowFilters] = useState(true);
+
+  const handleClusterClick = (clusterId: string) => {
+    navigate(`/clusters/${clusterId}`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -10,22 +27,29 @@ export const AnomaliesPage = () => {
             Monitor detected anomalies in your data trends.
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-accent transition-colors">
-          <Calendar className="w-4 h-4" />
-          Date Range
-        </button>
+        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+          <Filter className="w-4 h-4 mr-2" />
+          {showFilters ? "Hide" : "Show"} Filters
+        </Button>
       </div>
-      <div className="bg-card border border-border rounded-xl p-8 text-center">
-        <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-          <AlertTriangle className="w-8 h-8 text-muted-foreground" />
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {showFilters && (
+          <div className="lg:col-span-1">
+            <AnomalyFiltersPanel
+              filters={filters}
+              onFiltersChange={setFilters}
+            />
+          </div>
+        )}
+
+        <div className={showFilters ? "lg:col-span-3" : "lg:col-span-4"}>
+          <AnomaliesTable
+            filters={filters}
+            onFiltersChange={setFilters}
+            onClusterClick={handleClusterClick}
+          />
         </div>
-        <h3 className="text-lg font-medium text-foreground mb-2">
-          No anomalies detected
-        </h3>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          Anomalies are automatically detected when unusual patterns emerge in
-          your cluster data.
-        </p>
       </div>
     </div>
   );
