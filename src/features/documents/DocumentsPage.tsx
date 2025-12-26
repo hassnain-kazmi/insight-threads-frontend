@@ -26,7 +26,7 @@ export const DocumentsPage = () => {
           </p>
         </div>
         <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
-          <Filter className="w-4 h-4" />
+          <Filter className="w-4 h-4 mr-2" />
           {showFilters ? "Hide" : "Show"} Filters
         </Button>
       </div>
