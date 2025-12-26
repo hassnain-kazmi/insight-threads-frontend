@@ -42,6 +42,7 @@ import {
   formatDuration,
   intervalToDuration,
 } from "date-fns";
+import { formatDateTime } from "@/lib/utils";
 import { RSSIngestForm } from "./RSSIngestForm";
 import { HackerNewsIngestForm } from "./HackerNewsIngestForm";
 import { GitHubIngestForm } from "./GitHubIngestForm";
@@ -87,7 +88,7 @@ const IngestEventDetailModalContent = ({ eventId }: { eventId: string }) => {
                 Started At
               </p>
               <p className="mt-1 text-sm">
-                {new Date(event.started_at).toLocaleString()}
+                {formatDateTime(event.started_at)}
               </p>
             </div>
             {event.completed_at && (
@@ -96,7 +97,7 @@ const IngestEventDetailModalContent = ({ eventId }: { eventId: string }) => {
                   Completed At
                 </p>
                 <p className="mt-1 text-sm">
-                  {new Date(event.completed_at).toLocaleString()}
+                  {formatDateTime(event.completed_at)}
                 </p>
               </div>
             )}

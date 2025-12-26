@@ -13,6 +13,7 @@ import { X } from "lucide-react";
 import type { DocumentFilters } from "@/types/api";
 import { useClusters } from "@/hooks/useClusters";
 import { useIngestEvents } from "@/hooks/useIngest";
+import { formatDate } from "@/lib/utils";
 
 interface DocumentFiltersPanelProps {
   filters: DocumentFilters;
@@ -165,7 +166,7 @@ export const DocumentFiltersPanel = ({
               {ingestEventsData?.events.map((event) => (
                 <SelectItem key={event.id} value={event.id}>
                   {event.source || "Unknown"} -{" "}
-                  {new Date(event.started_at).toLocaleDateString()}
+                  {formatDate(event.started_at)}
                 </SelectItem>
               ))}
             </SelectContent>
