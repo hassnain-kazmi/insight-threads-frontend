@@ -173,3 +173,17 @@ export interface AnomalyFilters {
   limit?: number;
   offset?: number;
 }
+
+export interface DocumentSearchResult {
+  id: string;
+  title: string | null;
+  source_path: string | null;
+  similarity_score: number;
+  created_at: string;
+}
+
+export interface SearchResponse {
+  results: DocumentSearchResult[];
+  total: number;
+  query: string;
+}
