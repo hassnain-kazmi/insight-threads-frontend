@@ -4,7 +4,7 @@ import { Clock, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 export const IngestStatusBadge = ({
   status,
 }: {
-  status: "pending" | "running" | "completed" | "failed";
+  status: "pending" | "running" | "completed" | "failed" | null | undefined;
 }) => {
   const statusConfig = {
     pending: {
@@ -31,9 +31,14 @@ export const IngestStatusBadge = ({
       variant: "negative" as const,
       className: "text-red-600",
     },
-  };
+  } as const;
 
-  const config = statusConfig[status];
+  const validStatus =
+    status && status in statusConfig
+      ? (status as keyof typeof statusConfig)
+      : "pending";
+
+  const config = statusConfig[validStatus];
   const Icon = config.icon;
 
   return (

@@ -1,6 +1,22 @@
-import { Lightbulb, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, Layers } from "lucide-react";
+import { InsightList } from "@/components/insights/InsightList";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { useClusters } from "@/hooks/useClusters";
 
 export const InsightsPage = () => {
+  const [selectedClusterId, setSelectedClusterId] = useState<
+    string | undefined
+  >();
+  const { data: clustersData } = useClusters();
+
   return (
     <div className="space-y-6">
       <div>
@@ -10,23 +26,44 @@ export const InsightsPage = () => {
         </p>
       </div>
 
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Sparkles className="w-4 h-4 text-violet-500" />
-        <span>Powered by AI analysis</span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Sparkles className="w-4 h-4 text-violet-500" />
+          <span>Powered by AI analysis</span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Label
+            htmlFor="cluster-filter"
+            className="text-sm text-muted-foreground whitespace-nowrap"
+          >
+            Filter by cluster:
+          </Label>
+          <Select
+            value={selectedClusterId || "all"}
+            onValueChange={(value) =>
+              setSelectedClusterId(value === "all" ? undefined : value)
+            }
+          >
+            <SelectTrigger id="cluster-filter" className="w-full sm:w-[200px]">
+              <SelectValue placeholder="All clusters" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Clusters</SelectItem>
+              {clustersData?.clusters.map((cluster) => (
+                <SelectItem key={cluster.id} value={cluster.id}>
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-3.5 h-3.5" />
+                    <span>Cluster #{cluster.id.slice(0, 8)}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="bg-card border border-border rounded-xl p-8 text-center">
-        <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-          <Lightbulb className="w-8 h-8 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-medium text-foreground mb-2">
-          No insights yet
-        </h3>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          Insights are generated after your documents are clustered and
-          analyzed.
-        </p>
-      </div>
+      <InsightList clusterId={selectedClusterId} />
     </div>
   );
 };
