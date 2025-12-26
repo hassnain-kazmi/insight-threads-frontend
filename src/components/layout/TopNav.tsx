@@ -16,9 +16,7 @@ export const TopNav = ({
   const handleSignOut = async () => {
     try {
       await signOut();
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
+    } catch (error) {}
   };
 
   return (
@@ -26,7 +24,7 @@ export const TopNav = ({
       className={cn(
         "fixed top-0 right-0 z-30 h-16 bg-background/80 backdrop-blur-sm border-b border-border transition-all duration-300 ease-in-out",
         sidebarCollapsed ? "left-16" : "left-64",
-        "max-lg:left-0",
+        "max-lg:left-0"
       )}
     >
       <div className="h-full px-4 lg:px-6 flex items-center justify-between">

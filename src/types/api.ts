@@ -187,3 +187,17 @@ export interface SearchResponse {
   total: number;
   query: string;
 }
+
+export interface DocumentUMAPResponse {
+  document_id: string;
+  title: string | null;
+  source_path: string | null;
+  cluster_id: string | null;
+  x: number;
+  y: number;
+}
+
+export interface ClusterUMAPResponse {
+  documents: DocumentUMAPResponse[];
+  total: number;
+}

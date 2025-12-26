@@ -41,7 +41,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
       } catch (error) {
-        console.error("Error getting session:", error);
       } finally {
         setLoading(false);
       }
