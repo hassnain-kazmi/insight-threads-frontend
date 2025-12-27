@@ -1,9 +1,23 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useCluster } from "@/hooks/useClusters";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { PageTransition } from "@/components/ui/page-transition";
+import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InfoNote } from "@/components/ui/info-note";
+import { SentimentGauge } from "@/components/ui/sentiment-gauge";
+import { KeywordCloud } from "@/components/ui/keyword-cloud";
+import { ProgressRing } from "@/components/ui/progress-ring";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   ArrowLeft,
   TrendingUp,
@@ -12,6 +26,8 @@ import {
   AlertTriangle,
   Tag,
   Activity,
+  ExternalLink,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,18 +38,23 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   ResponsiveContainer,
   Legend,
 } from "recharts";
 import { format } from "date-fns";
-import { useMemo, useCallback } from "react";
-import { getSentimentInfo } from "@/lib/utils";
+import { useMemo, useCallback, useState } from "react";
+import {
+  getSentimentInfo,
+  getClusterDisplayName,
+  getMomentumLabel,
+} from "@/lib/utils";
 
 export const ClusterDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: cluster, isLoading, error } = useCluster(id || "");
+  const [showKeywordWeights, setShowKeywordWeights] = useState(false);
 
   const chartData = useMemo(() => {
     if (!cluster || cluster.timeseries.length === 0) return [];
@@ -65,9 +86,22 @@ export const ClusterDetailPage = () => {
     );
   }, [cluster?.keywords]);
 
+  const clusterDisplayName = useMemo(() => {
+    if (!cluster) return "";
+    return getClusterDisplayName(cluster.id, cluster.keywords);
+  }, [cluster]);
+
+  const momentumInfo = useMemo(() => {
+    return getMomentumLabel(latestMomentum);
+  }, [latestMomentum]);
+
   const handleBackClick = useCallback(() => {
     navigate("/clusters");
   }, [navigate]);
+
+  const handleViewDocuments = useCallback(() => {
+    navigate(`/documents?cluster_id=${cluster?.id}`);
+  }, [navigate, cluster?.id]);
 
   const formatChartDate = useCallback((value: string) => {
     try {
@@ -104,7 +138,7 @@ export const ClusterDetailPage = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 animate-in fade-in-0 duration-300">
         <div className="flex items-center gap-4">
           <Skeleton className="h-10 w-10 rounded-md" />
           <div className="space-y-2">
@@ -128,22 +162,23 @@ export const ClusterDetailPage = () => {
 
   if (error || !cluster) {
     return (
-      <div className="space-y-6">
-        <Button variant="outline" onClick={handleBackClick} className="gap-2">
-          <ArrowLeft className="w-4 h-4" />
-          Back to Clusters
-        </Button>
-        <div className="bg-card border border-border rounded-xl p-8 text-center">
-          <h3 className="text-lg font-medium text-foreground mb-2">
-            Cluster not found
-          </h3>
-          <p className="text-muted-foreground">
-            {error instanceof Error
-              ? error.message
-              : "The requested cluster could not be found."}
-          </p>
+      <PageTransition>
+        <div className="space-y-6">
+          <Button variant="outline" onClick={handleBackClick} className="gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Clusters
+          </Button>
+          <EmptyState
+            icon={Layers}
+            title="Cluster not found"
+            description={
+              error instanceof Error
+                ? error.message
+                : "The requested cluster could not be found."
+            }
+          />
         </div>
-      </div>
+      </PageTransition>
     );
   }
 
@@ -151,53 +186,89 @@ export const ClusterDetailPage = () => {
   const trendingPercent = Math.round(trendingScore * 100);
 
   const sentiment = cluster.avg_sentiment;
-  const { variant: sentimentVariant, label: sentimentLabel } =
+  const { variant: sentimentVariant, label: sentimentLabel, description: sentimentDescription } =
     getSentimentInfo(sentiment);
 
+  const breadcrumbItems = useMemo(() => {
+    if (!cluster) return undefined;
+    return [
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Clusters", href: "/clusters" },
+      { label: clusterDisplayName, href: undefined },
+    ];
+  }, [cluster, clusterDisplayName]);
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleBackClick}
-          className="flex-shrink-0"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-semibold text-foreground">
-            Cluster #{cluster.id.slice(0, 8)}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Created {formatFullDateTime(cluster.created_at)}
-          </p>
-        </div>
-      </div>
+    <PageTransition>
+      <div className="space-y-6">
+        <Breadcrumb items={breadcrumbItems} />
+        <PageHeader
+          title={clusterDisplayName}
+          description={`Created ${formatFullDateTime(cluster.created_at)}`}
+          icon={Layers}
+          iconColor="text-teal-600 dark:text-teal-400"
+          actions={
+            <Button variant="outline" onClick={handleViewDocuments} size="sm">
+              <FileText className="w-4 h-4 mr-2" />
+              View Documents
+            </Button>
+          }
+        />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="animate-in fade-in-0 slide-in-from-bottom-2">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               Trending Score
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="text-muted-foreground hover:text-foreground">
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      Trending score (0-100%) indicates how much activity and
+                      momentum this topic has. Higher scores mean more trending.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-semibold text-foreground">
-                {trendingPercent}%
-              </span>
-            </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden mt-2">
-              <div
-                className="h-full bg-gradient-to-r from-amber-400 to-amber-600 transition-all duration-500 ease-out"
-                style={{ width: `${trendingPercent}%` }}
+            <div className="flex flex-col items-center gap-3">
+              <ProgressRing
+                value={trendingPercent}
+                size={100}
+                strokeWidth={10}
+                color="#f59e0b"
+                showLabel
               />
+              <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-400 to-amber-600 transition-all duration-500 ease-out"
+                  style={{ width: `${trendingPercent}%` }}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="animate-in fade-in-0 slide-in-from-bottom-2" style={{ animationDelay: "50ms" }}>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <FileText className="w-4 h-4" />
@@ -211,29 +282,85 @@ export const ClusterDetailPage = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="animate-in fade-in-0 slide-in-from-bottom-2" style={{ animationDelay: "100ms" }}>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               Avg Sentiment
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="text-muted-foreground hover:text-foreground">
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{sentimentDescription}</p>
+                    {sentiment !== null && (
+                      <p className="text-xs mt-1">Score: {sentiment.toFixed(3)} (range: -1 to +1)</p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2">
-              <Badge variant={sentimentVariant}>{sentimentLabel}</Badge>
-              {sentiment !== null && (
-                <span className="text-lg font-semibold text-foreground">
-                  {sentiment.toFixed(2)}
-                </span>
-              )}
-            </div>
+            {sentiment !== null ? (
+              <div className="flex flex-col items-center gap-3">
+                <SentimentGauge value={sentiment} size={100} />
+                <Badge variant={sentimentVariant} className="text-xs">
+                  {sentimentLabel}
+                </Badge>
+              </div>
+            ) : (
+              <span className="text-sm text-muted-foreground">N/A</span>
+            )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="animate-in fade-in-0 slide-in-from-bottom-2" style={{ animationDelay: "150ms" }}>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Activity className="w-4 h-4" />
               Momentum
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="text-muted-foreground hover:text-foreground">
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{momentumInfo.description}</p>
+                    {latestMomentum !== null && (
+                      <p className="text-xs mt-1">Value: {latestMomentum > 0 ? "+" : ""}{latestMomentum.toFixed(3)}</p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -248,10 +375,15 @@ export const ClusterDetailPage = () => {
                       : "text-muted-foreground"
                   }`}
                 />
-                <span className="text-lg font-semibold text-foreground">
-                  {latestMomentum > 0 ? "+" : ""}
-                  {latestMomentum.toFixed(2)}
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-lg font-semibold text-foreground">
+                    {momentumInfo.label}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {latestMomentum > 0 ? "+" : ""}
+                    {latestMomentum.toFixed(2)}
+                  </span>
+                </div>
               </div>
             ) : (
               <span className="text-sm text-muted-foreground">N/A</span>
@@ -262,22 +394,40 @@ export const ClusterDetailPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Card>
+          <Card className="animate-in fade-in-0 slide-in-from-bottom-4">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
                 Timeseries Analysis
               </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Track mentions, sentiment, and forecasted trends over time
+              </p>
             </CardHeader>
             <CardContent>
               {chartData.length > 0 ? (
-                <Tabs defaultValue="mentions" className="w-full">
-                  <TabsList>
-                    <TabsTrigger value="mentions">Mentions</TabsTrigger>
-                    <TabsTrigger value="sentiment">Sentiment</TabsTrigger>
-                    <TabsTrigger value="forecast">Forecast</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="mentions" className="mt-4">
+                <>
+                  <InfoNote variant="info" className="mb-4">
+                    <p>
+                      <strong>Understanding Timeseries Data:</strong> This chart shows how this cluster's activity evolves over time. 
+                      Use the tabs to switch between different views:
+                    </p>
+                    <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
+                      <li><strong>Mentions:</strong> Daily count of documents mentioning this topic</li>
+                      <li><strong>Sentiment:</strong> Average emotional tone (-1 negative to +1 positive) with momentum trend</li>
+                      <li><strong>Forecast:</strong> Predicted mention range with confidence intervals</li>
+                    </ul>
+                  </InfoNote>
+                  <Tabs defaultValue="mentions" className="w-full">
+                    <TabsList>
+                      <TabsTrigger value="mentions">Mentions</TabsTrigger>
+                      <TabsTrigger value="sentiment">Sentiment</TabsTrigger>
+                      <TabsTrigger value="forecast">Forecast</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="mentions" className="mt-4">
+                      <div className="mb-2 text-xs text-muted-foreground">
+                        Number of document mentions per day
+                      </div>
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -287,7 +437,7 @@ export const ClusterDetailPage = () => {
                           stroke="#6b7280"
                         />
                         <YAxis stroke="#6b7280" />
-                        <Tooltip
+                        <RechartsTooltip
                           labelFormatter={formatTooltipDate}
                           contentStyle={chartTooltipStyle}
                         />
@@ -304,6 +454,16 @@ export const ClusterDetailPage = () => {
                     </ResponsiveContainer>
                   </TabsContent>
                   <TabsContent value="sentiment" className="mt-4">
+                    <InfoNote variant="tip" className="mb-4">
+                      <p>
+                        <strong>Sentiment Analysis:</strong> The sentiment score ranges from -1 (very negative) to +1 (very positive). 
+                        The momentum line (dashed) shows the rate of change—positive momentum indicates improving sentiment, 
+                        negative momentum suggests declining sentiment.
+                      </p>
+                    </InfoNote>
+                    <div className="mb-2 text-xs text-muted-foreground">
+                      Average sentiment (-1 to +1) and momentum trend
+                    </div>
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -313,7 +473,7 @@ export const ClusterDetailPage = () => {
                           stroke="#6b7280"
                         />
                         <YAxis domain={[-1, 1]} stroke="#6b7280" />
-                        <Tooltip
+                        <RechartsTooltip
                           labelFormatter={formatTooltipDate}
                           contentStyle={chartTooltipStyle}
                         />
@@ -339,6 +499,16 @@ export const ClusterDetailPage = () => {
                     </ResponsiveContainer>
                   </TabsContent>
                   <TabsContent value="forecast" className="mt-4">
+                    <InfoNote variant="tip" className="mb-4">
+                      <p>
+                        <strong>Forecast Interpretation:</strong> The shaded area represents the predicted range of mentions 
+                        with confidence intervals. When actual mentions (orange line) fall outside this range, it indicates 
+                        unexpected activity that may warrant attention.
+                      </p>
+                    </InfoNote>
+                    <div className="mb-2 text-xs text-muted-foreground">
+                      Forecasted mention range (confidence interval) vs actual mentions
+                    </div>
                     <ResponsiveContainer width="100%" height={300}>
                       <AreaChart data={chartData}>
                         <defs>
@@ -368,7 +538,7 @@ export const ClusterDetailPage = () => {
                           stroke="#6b7280"
                         />
                         <YAxis stroke="#6b7280" />
-                        <Tooltip
+                        <RechartsTooltip
                           labelFormatter={formatTooltipDate}
                           contentStyle={chartTooltipStyle}
                         />
@@ -380,7 +550,7 @@ export const ClusterDetailPage = () => {
                           strokeWidth={1}
                           strokeDasharray="3 3"
                           fill="url(#forecastGradient)"
-                          name="Forecast Range"
+                          name="Forecast Upper Bound"
                         />
                         <Area
                           type="monotone"
@@ -389,7 +559,7 @@ export const ClusterDetailPage = () => {
                           strokeWidth={1}
                           strokeDasharray="3 3"
                           fill="white"
-                          name=""
+                          name="Forecast Lower Bound"
                         />
                         <Line
                           type="monotone"
@@ -402,7 +572,8 @@ export const ClusterDetailPage = () => {
                       </AreaChart>
                     </ResponsiveContainer>
                   </TabsContent>
-                </Tabs>
+                  </Tabs>
+                </>
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                   No timeseries data available
@@ -411,7 +582,7 @@ export const ClusterDetailPage = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="animate-in fade-in-0 slide-in-from-bottom-4" style={{ animationDelay: "100ms" }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Tag className="w-5 h-5" />
@@ -420,21 +591,32 @@ export const ClusterDetailPage = () => {
             </CardHeader>
             <CardContent>
               {sortedKeywords.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {sortedKeywords.map((keyword) => (
-                    <Badge
-                      key={keyword.id}
-                      variant="outline"
-                      className="px-3 py-1.5 text-sm"
-                    >
-                      {keyword.keyword}
-                      {keyword.weight !== null && (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          ({keyword.weight.toFixed(2)})
-                        </span>
-                      )}
-                    </Badge>
-                  ))}
+                <div className="space-y-4">
+                  <InfoNote variant="info" className="mb-3">
+                    <p>
+                      <strong>Keyword Cloud:</strong> Keywords are extracted from documents in this cluster and ranked by importance. 
+                      Larger, bolder keywords have higher weights and are more central to this topic. The visual size represents importance.
+                    </p>
+                  </InfoNote>
+                  <KeywordCloud keywords={sortedKeywords} maxKeywords={30} />
+                  <button
+                    onClick={() => setShowKeywordWeights(!showKeywordWeights)}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showKeywordWeights ? "Hide" : "Show"} numerical weights
+                  </button>
+                  {showKeywordWeights && (
+                    <div className="mt-2 p-3 rounded-lg bg-muted/50 text-xs space-y-1">
+                      {sortedKeywords.slice(0, 10).map((keyword) => (
+                        <div key={keyword.id} className="flex justify-between">
+                          <span className="font-medium">{keyword.keyword}</span>
+                          <span className="text-muted-foreground">
+                            {keyword.weight?.toFixed(3) ?? "N/A"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
@@ -446,7 +628,7 @@ export const ClusterDetailPage = () => {
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="animate-in fade-in-0 slide-in-from-right-4">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Lightbulb className="w-5 h-5" />
@@ -460,7 +642,14 @@ export const ClusterDetailPage = () => {
             </CardHeader>
             <CardContent>
               {cluster.insights.length > 0 ? (
-                <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                <>
+                  <InfoNote variant="tip" className="mb-4">
+                    <p>
+                      <strong>AI-Generated Insights:</strong> These insights are automatically generated by analyzing patterns 
+                      in this cluster's documents. Confidence scores indicate how certain the AI model is about each insight.
+                    </p>
+                  </InfoNote>
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto">
                   {cluster.insights.map((insight) => (
                     <div
                       key={insight.id}
@@ -472,14 +661,25 @@ export const ClusterDetailPage = () => {
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{formatFullDateTime(insight.generated_at)}</span>
                         {insight.confidence !== null && (
-                          <Badge variant="outline" className="text-xs">
-                            {(insight.confidence * 100).toFixed(0)}%
-                          </Badge>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="text-xs cursor-help">
+                                  {(insight.confidence * 100).toFixed(0)}%
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Confidence: {(insight.confidence * 100).toFixed(1)}%</p>
+                                <p className="text-xs mt-1">AI model confidence in this insight</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </div>
                     </div>
                   ))}
-                </div>
+                  </div>
+                </>
               ) : (
                 <p className="text-sm text-muted-foreground">
                   No insights available
@@ -488,7 +688,7 @@ export const ClusterDetailPage = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="animate-in fade-in-0 slide-in-from-right-4" style={{ animationDelay: "100ms" }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
@@ -502,7 +702,15 @@ export const ClusterDetailPage = () => {
             </CardHeader>
             <CardContent>
               {cluster.anomalies.length > 0 ? (
-                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                <>
+                  <InfoNote variant="warning" className="mb-4">
+                    <p>
+                      <strong>Anomaly Detection:</strong> Anomalies are unusual patterns detected in this cluster's trends. 
+                      Higher scores indicate more significant deviations. Review these to identify emerging topics, errors, 
+                      or significant changes in activity.
+                    </p>
+                  </InfoNote>
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
                   {cluster.anomalies.map((anomaly) => (
                     <div
                       key={anomaly.id}
@@ -535,7 +743,8 @@ export const ClusterDetailPage = () => {
                       </p>
                     </div>
                   ))}
-                </div>
+                  </div>
+                </>
               ) : (
                 <p className="text-sm text-muted-foreground">
                   No anomalies detected
@@ -545,6 +754,7 @@ export const ClusterDetailPage = () => {
           </Card>
         </div>
       </div>
-    </div>
+      </div>
+    </PageTransition>
   );
 };

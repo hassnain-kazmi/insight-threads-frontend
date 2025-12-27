@@ -66,7 +66,7 @@ export const useTriggerIngestion = () => {
       return apiClient.post<TriggerIngestionResponse>("/ingest/trigger", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ingest-events"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.ingestEvents() });
     },
   });
 };

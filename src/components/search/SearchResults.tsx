@@ -2,20 +2,22 @@ import { Search, ExternalLink, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useSearch } from "@/hooks/useSearch";
 import type { DocumentSearchResult } from "@/types/api";
 import { formatDistanceToNow } from "date-fns";
+import { getRelevancePercentage, getRelevanceDescription } from "@/lib/utils";
 
 interface SearchResultsProps {
   query: string;
   similarityThreshold?: number;
   onResultClick: (documentId: string) => void;
 }
-
-const getRelevancePercentage = (similarityScore: number): number => {
-  const clamped = Math.max(0, Math.min(2, similarityScore));
-  return Math.round(((2 - clamped) / 2) * 100);
-};
 
 const getRelevanceColor = (percentage: number): string => {
   if (percentage >= 80) return "text-emerald-600 dark:text-emerald-400";
@@ -32,10 +34,11 @@ const SearchResultItem = ({
   onClick: () => void;
 }) => {
   const relevance = getRelevancePercentage(result.similarity_score);
+  const description = getRelevanceDescription(relevance);
 
   return (
     <Card
-      className="cursor-pointer transition-all hover:shadow-md hover:border-ring"
+      className="cursor-pointer transition-all hover:shadow-md hover:border-ring animate-in fade-in-0 slide-in-from-bottom-2"
       onClick={onClick}
     >
       <CardContent className="p-4">
@@ -62,12 +65,24 @@ const SearchResultItem = ({
                 )}
               </div>
               <div className="flex flex-col items-end gap-2">
-                <Badge
-                  variant="outline"
-                  className={`${getRelevanceColor(relevance)} border-current`}
-                >
-                  {relevance}% match
-                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="outline"
+                        className={`${getRelevanceColor(relevance)} border-current cursor-help`}
+                      >
+                        {relevance}% match
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p><strong>{description}</strong></p>
+                      <p className="text-xs mt-1">
+                        Similarity score: {result.similarity_score.toFixed(3)} (lower = more similar)
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Clock className="w-3 h-3" />
                   <span>

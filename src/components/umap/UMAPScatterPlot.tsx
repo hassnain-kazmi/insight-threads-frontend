@@ -10,36 +10,14 @@ import {
   Cell,
 } from "recharts";
 import type { DocumentUMAPResponse } from "@/types/api";
+import { getClusterColor } from "./umapColors";
 
 interface UMAPScatterPlotProps {
   data: DocumentUMAPResponse[];
   onDocumentClick?: (documentId: string) => void;
+  showGrid?: boolean;
+  highlightedClusterId?: string | null;
 }
-
-const CLUSTER_COLORS = [
-  "hsl(185, 50%, 50%)", // Deep Teal
-  "hsl(145, 45%, 45%)", // Muted Green
-  "hsl(280, 40%, 50%)", // Muted Purple
-  "hsl(60, 50%, 50%)", // Amber
-  "hsl(25, 50%, 50%)", // Orange
-  "hsl(200, 45%, 50%)", // Blue
-  "hsl(320, 40%, 50%)", // Pink
-  "hsl(160, 45%, 45%)", // Teal-Green
-  "hsl(240, 40%, 50%)", // Indigo
-  "hsl(15, 50%, 50%)", // Red-Orange
-];
-
-const UNCLUSTERED_COLOR = "hsl(0, 0%, 70%)";
-
-const getClusterColor = (clusterId: string | null): string => {
-  if (!clusterId) return UNCLUSTERED_COLOR;
-  let hash = 0;
-  for (let i = 0; i < clusterId.length; i++) {
-    hash = clusterId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % CLUSTER_COLORS.length;
-  return CLUSTER_COLORS[index];
-};
 
 interface TooltipProps {
   active?: boolean;
@@ -76,6 +54,8 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
 export const UMAPScatterPlot = ({
   data,
   onDocumentClick,
+  showGrid = true,
+  highlightedClusterId = null,
 }: UMAPScatterPlotProps) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -134,11 +114,13 @@ export const UMAPScatterPlot = ({
     <div className="w-full h-full min-h-[500px] bg-card border border-border rounded-xl p-4">
       <ResponsiveContainer width="100%" height="100%" minHeight={500}>
         <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="hsl(var(--border))"
-            opacity={0.3}
-          />
+          {showGrid && (
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="hsl(var(--border))"
+              opacity={0.3}
+            />
+          )}
           <XAxis
             type="number"
             dataKey="x"
@@ -169,14 +151,31 @@ export const UMAPScatterPlot = ({
             {chartData.map((entry, index) => {
               const color = getClusterColor(entry.cluster_id);
               const isHovered = hoveredIndex === index;
+              const isHighlighted = highlightedClusterId 
+                ? entry.cluster_id === highlightedClusterId 
+                : true;
+              const isDimmed = highlightedClusterId 
+                ? entry.cluster_id !== highlightedClusterId 
+                : false;
+              
               return (
                 <Cell
                   key={entry.document_id}
                   fill={color}
-                  opacity={isHovered ? 1 : 0.7}
+                  opacity={
+                    isHovered 
+                      ? 1 
+                      : isDimmed 
+                        ? 0.2 
+                        : isHighlighted 
+                          ? 0.8 
+                          : 0.7
+                  }
                   style={{
                     cursor: onDocumentClick ? "pointer" : "default",
                     transition: "opacity 0.2s ease",
+                    stroke: isHighlighted && !isDimmed ? color : "none",
+                    strokeWidth: isHighlighted && !isDimmed ? 1.5 : 0,
                   }}
                 />
               );

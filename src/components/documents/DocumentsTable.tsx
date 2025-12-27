@@ -15,6 +15,7 @@ import { useDocuments } from "@/hooks/useDocuments";
 import { useIngestEvents } from "@/hooks/useIngest";
 import type { DocumentFilters, DocumentResponse } from "@/types/api";
 import { formatDistanceToNow } from "date-fns";
+import { getSourceTypeFromPath, calculatePagination } from "@/lib/utils";
 
 interface DocumentsTableProps {
   filters: DocumentFilters;
@@ -22,7 +23,7 @@ interface DocumentsTableProps {
   onDocumentClick: (documentId: string) => void;
 }
 
-const getSourceIcon = (sourceType: string | null) => {
+const getSourceIcon = (sourceType: string) => {
   switch (sourceType) {
     case "hackernews":
       return "📰";
@@ -33,42 +34,6 @@ const getSourceIcon = (sourceType: string | null) => {
     default:
       return "📄";
   }
-};
-
-const getSourceTypeFromPath = (sourcePath: string | null): string | null => {
-  if (!sourcePath) return null;
-
-  const lowerPath = sourcePath.toLowerCase();
-
-  if (
-    lowerPath.includes("news.ycombinator.com") ||
-    lowerPath.includes("hackernews") ||
-    lowerPath.includes("ycombinator")
-  ) {
-    return "hackernews";
-  }
-
-  if (
-    lowerPath.includes("github.com") ||
-    lowerPath.includes("api.github.com")
-  ) {
-    return "github";
-  }
-
-  if (
-    lowerPath.includes("/rss") ||
-    lowerPath.includes("/feed") ||
-    lowerPath.includes("?feed=") ||
-    lowerPath.endsWith(".xml") ||
-    lowerPath.endsWith(".rss") ||
-    lowerPath.includes("rss.xml") ||
-    lowerPath.includes("feed.xml") ||
-    lowerPath.includes("atom.xml")
-  ) {
-    return "rss";
-  }
-
-  return null;
 };
 
 export const DocumentsTable = ({
@@ -97,13 +62,18 @@ export const DocumentsTable = ({
       }
     }
 
-    const sourceFromPath = getSourceTypeFromPath(document.source_path);
-    return sourceFromPath || "unknown";
+    return getSourceTypeFromPath(document.source_path);
   };
 
-  const pageSize = filters.limit || 50;
-  const currentPage = Math.floor((filters.offset || 0) / pageSize) + 1;
-  const totalPages = data ? Math.ceil(data.total / pageSize) : 0;
+  const { pageSize, currentPage, totalPages, startItem, endItem } = data
+    ? calculatePagination(filters.offset, filters.limit, data.total)
+    : {
+        pageSize: filters.limit || 50,
+        currentPage: 1,
+        totalPages: 0,
+        startItem: 0,
+        endItem: 0,
+      };
 
   const handlePageChange = (newPage: number) => {
     const newOffset = (newPage - 1) * pageSize;
@@ -254,9 +224,7 @@ export const DocumentsTable = ({
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Showing {(filters.offset || 0) + 1} to{" "}
-            {Math.min((filters.offset || 0) + pageSize, data.total)} of{" "}
-            {data.total} documents
+            Showing {startItem} to {endItem} of {data.total} documents
           </div>
           <div className="flex items-center gap-2">
             <Button

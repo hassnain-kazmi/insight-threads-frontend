@@ -1,14 +1,27 @@
+import { useMemo } from "react";
 import { InsightCard } from "./InsightCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useInsights } from "@/hooks/useInsights";
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, Search } from "lucide-react";
 
 interface InsightListProps {
   clusterId?: string;
+  searchQuery?: string;
 }
 
-export const InsightList = ({ clusterId }: InsightListProps) => {
+export const InsightList = ({ clusterId, searchQuery = "" }: InsightListProps) => {
   const { data, isLoading, error } = useInsights(clusterId);
+
+  const filteredInsights = useMemo(() => {
+    if (!data || !searchQuery.trim()) {
+      return data?.insights || [];
+    }
+    const query = searchQuery.toLowerCase();
+    return data.insights.filter((insight) =>
+      insight.insight_text.toLowerCase().includes(query)
+    );
+  }, [data, searchQuery]);
 
   if (isLoading) {
     return (
@@ -54,27 +67,46 @@ export const InsightList = ({ clusterId }: InsightListProps) => {
 
   if (!data || data.insights.length === 0) {
     return (
-      <div className="bg-card border border-border rounded-xl p-8 text-center">
-        <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-          <Lightbulb className="w-8 h-8 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-medium text-foreground mb-2">
-          No insights found
-        </h3>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          {clusterId
+      <EmptyState
+        icon={Lightbulb}
+        title="No insights found"
+        description={
+          clusterId
             ? "No insights have been generated for this cluster yet."
-            : "Insights are generated after your documents are clustered and analyzed."}
-        </p>
-      </div>
+            : "Insights are generated after your documents are clustered and analyzed."
+        }
+      />
+    );
+  }
+
+  if (filteredInsights.length === 0 && searchQuery.trim()) {
+    return (
+      <EmptyState
+        icon={Search}
+        title="No matching insights"
+        description={`No insights match your search query "${searchQuery}". Try a different search term.`}
+      />
     );
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      {data.insights.map((insight) => (
-        <InsightCard key={insight.id} insight={insight} />
-      ))}
+    <div className="space-y-4">
+      {searchQuery.trim() && (
+        <p className="text-sm text-muted-foreground">
+          Showing {filteredInsights.length} of {data.insights.length} insights
+        </p>
+      )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {filteredInsights.map((insight, index) => (
+          <div
+            key={insight.id}
+            className="animate-in fade-in-0 slide-in-from-bottom-2 h-full"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <InsightCard insight={insight} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

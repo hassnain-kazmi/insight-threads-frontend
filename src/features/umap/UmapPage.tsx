@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { Map, RotateCcw } from "lucide-react";
+import { PageTransition } from "@/components/ui/page-transition";
+import { PageHeader } from "@/components/ui/page-header";
+import { InfoNote } from "@/components/ui/info-note";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -11,7 +14,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UMAPScatterPlot } from "@/components/umap/UMAPScatterPlot";
+import { UMAPStats } from "@/components/umap/UMAPStats";
+import { ClusterLegend } from "@/components/umap/ClusterLegend";
+import { UMAPControls } from "@/components/umap/UMAPControls";
 import { DocumentDetailDrawer } from "@/components/documents/DocumentDetailDrawer";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useUmapDocuments, useUmapCluster } from "@/hooks/useUmap";
 import { useClusters } from "@/hooks/useClusters";
 
@@ -23,6 +30,8 @@ export const UmapPage = () => {
     null
   );
   const [limit, setLimit] = useState<number>(5000);
+  const [showGrid, setShowGrid] = useState(true);
+  const [highlightedClusterId, setHighlightedClusterId] = useState<string | null>(null);
 
   const { data: clustersData, isLoading: clustersLoading } = useClusters();
 
@@ -50,31 +59,53 @@ export const UmapPage = () => {
   const handleReset = () => {
     setSelectedClusterId(null);
     setSelectedDocumentId(null);
+    setHighlightedClusterId(null);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">
-            UMAP Visualization
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Explore document embeddings in 2D space. Click on points to view
-            document details.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {selectedClusterId && (
-            <Button variant="outline" onClick={handleReset} className="h-9">
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reset View
-            </Button>
-          )}
-        </div>
-      </div>
+    <PageTransition>
+      <div className="space-y-6">
+        <PageHeader
+          title="UMAP Visualization"
+          description="Explore document embeddings in 2D space. Click on points to view document details."
+          icon={Map}
+          iconColor="text-indigo-600 dark:text-indigo-400"
+          actions={
+            selectedClusterId ? (
+              <Button variant="outline" onClick={handleReset} size="sm">
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset View
+              </Button>
+            ) : undefined
+          }
+        />
 
-      <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+        <InfoNote variant="info">
+          <p>
+            <strong>Understanding UMAP Visualization:</strong> UMAP (Uniform Manifold Approximation and Projection) 
+            reduces high-dimensional document embeddings to 2D space for visualization. Documents that are semantically 
+            similar appear closer together on the plot.
+          </p>
+          <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
+            <li><strong>Distance = Similarity:</strong> Closer points are more similar in meaning</li>
+            <li><strong>Color Coding:</strong> Points are colored by their primary cluster assignment</li>
+            <li><strong>Interactivity:</strong> Hover to see document titles, click to view full details</li>
+            <li><strong>Cluster Highlighting:</strong> Click a cluster in the legend to highlight it</li>
+            <li><strong>Controls:</strong> Toggle grid visibility and reset view for better exploration</li>
+          </ul>
+          <p className="mt-2 text-xs">
+            <strong>Tip:</strong> Use this visualization to discover document relationships, identify outliers, 
+            and understand how your content clusters naturally.
+          </p>
+        </InfoNote>
+
+        {umapData.length > 0 && (
+          <div className="animate-in fade-in-0 slide-in-from-bottom-2" style={{ animationDelay: "50ms" }}>
+            <UMAPStats data={umapData} />
+          </div>
+        )}
+
+        <div className="bg-card border border-border rounded-xl p-4 space-y-4 animate-in fade-in-0 slide-in-from-top-2 duration-300">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex-1">
             <Label htmlFor="cluster-select" className="text-sm mb-2 block">
@@ -144,57 +175,87 @@ export const UmapPage = () => {
         {total > 0 && (
           <div className="text-sm text-muted-foreground">
             Displaying {umapData.length} of {total} documents
+            {highlightedClusterId && (
+              <span className="ml-2 text-amber-600 dark:text-amber-400">
+                • Highlighting cluster
+              </span>
+            )}
           </div>
         )}
-      </div>
+        </div>
 
-      {error ? (
-        <div className="bg-card border border-border rounded-xl p-8 text-center">
-          <div className="w-16 h-16 mx-auto rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-4">
-            <Map className="w-8 h-8 text-red-600 dark:text-red-400" />
+        {umapData.length > 0 && (
+          <div className="animate-in fade-in-0 slide-in-from-bottom-2" style={{ animationDelay: "75ms" }}>
+            <UMAPControls
+              showGrid={showGrid}
+              onGridToggle={setShowGrid}
+              onReset={handleReset}
+            />
           </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">
-            Error loading UMAP data
-          </h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            {error instanceof Error
-              ? error.message
-              : "Failed to load UMAP projections. Please try again."}
-          </p>
-        </div>
-      ) : isLoading ? (
-        <div className="bg-card border border-border rounded-xl p-4">
-          <Skeleton className="w-full h-[500px] rounded-lg" />
-        </div>
-      ) : umapData.length === 0 ? (
-        <div className="bg-card border border-border rounded-xl p-8 text-center min-h-[500px] flex items-center justify-center">
-          <div>
-            <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-              <Map className="w-8 h-8 text-muted-foreground" />
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div className="lg:col-span-3 animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: "100ms" }}>
+            {error ? (
+              <EmptyState
+                icon={Map}
+                title="Error loading UMAP data"
+                description={
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to load UMAP projections. Please try again."
+                }
+                className="border-red-200 dark:border-red-900"
+              />
+            ) : isLoading ? (
+              <div className="bg-card border border-border rounded-xl p-4">
+                <Skeleton className="w-full h-[500px] rounded-lg" />
+              </div>
+            ) : umapData.length === 0 ? (
+              <div className="min-h-[500px] flex items-center justify-center">
+                <EmptyState
+                  icon={Map}
+                  title={
+                    selectedClusterId
+                      ? "No embeddings available for this cluster"
+                      : "No embeddings available"
+                  }
+                  description={
+                    selectedClusterId
+                      ? "This cluster doesn't have UMAP projections yet. Documents may need to be processed."
+                      : "UMAP projections will appear here after documents are processed and embedded."
+                  }
+                />
+              </div>
+            ) : (
+              <UMAPScatterPlot
+                data={umapData}
+                onDocumentClick={setSelectedDocumentId}
+                showGrid={showGrid}
+                highlightedClusterId={highlightedClusterId}
+              />
+            )}
+          </div>
+
+          {umapData.length > 0 && !isLoading && (
+            <div className="animate-in fade-in-0 slide-in-from-right-4 duration-500" style={{ animationDelay: "150ms" }}>
+              <ClusterLegend
+                data={umapData}
+                selectedClusterId={highlightedClusterId}
+                onClusterSelect={(id) => {
+                  setHighlightedClusterId(id === highlightedClusterId ? null : id);
+                }}
+                onClear={() => setHighlightedClusterId(null)}
+              />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">
-              {selectedClusterId
-                ? "No embeddings available for this cluster"
-                : "No embeddings available"}
-            </h3>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              {selectedClusterId
-                ? "This cluster doesn't have UMAP projections yet. Documents may need to be processed."
-                : "UMAP projections will appear here after documents are processed and embedded."}
-            </p>
-          </div>
+          )}
         </div>
-      ) : (
-        <UMAPScatterPlot
-          data={umapData}
-          onDocumentClick={setSelectedDocumentId}
-        />
-      )}
 
       <DocumentDetailDrawer
         documentId={selectedDocumentId}
         onClose={() => setSelectedDocumentId(null)}
       />
-    </div>
+      </div>
+    </PageTransition>
   );
 };

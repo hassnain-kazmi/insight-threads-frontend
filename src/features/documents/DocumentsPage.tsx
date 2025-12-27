@@ -1,9 +1,13 @@
 import { useState } from "react";
-import { Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { DocumentFiltersPanel } from "@/components/documents/DocumentFilters";
+import { PageTransition } from "@/components/ui/page-transition";
+import { PageHeader } from "@/components/ui/page-header";
+import { InfoNote } from "@/components/ui/info-note";
+import { DocumentFiltersHorizontal } from "@/components/documents/DocumentFiltersHorizontal";
 import { DocumentsTable } from "@/components/documents/DocumentsTable";
 import { DocumentDetailDrawer } from "@/components/documents/DocumentDetailDrawer";
+import { SourceDistribution } from "@/components/documents/SourceDistribution";
+import { useDocuments } from "@/hooks/useDocuments";
+import { FileText } from "lucide-react";
 import type { DocumentFilters } from "@/types/api";
 
 export const DocumentsPage = () => {
@@ -14,46 +18,79 @@ export const DocumentsPage = () => {
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
     null
   );
-  const [showFilters, setShowFilters] = useState(true);
+
+  const { data: documentsData } = useDocuments({ limit: 1000, offset: 0 });
+
+  const hasActiveFilters = Object.keys(filters).some(
+    (key) =>
+      key !== "limit" &&
+      key !== "offset" &&
+      filters[key as keyof DocumentFilters]
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Documents</h1>
-          <p className="text-muted-foreground mt-1">
-            Browse and filter your ingested documents.
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
-          <Filter className="w-4 h-4 mr-2" />
-          {showFilters ? "Hide" : "Show"} Filters
-        </Button>
-      </div>
+    <PageTransition>
+      <div className="space-y-6">
+        <PageHeader
+          title="Documents"
+          description="Browse and filter your ingested documents"
+          icon={FileText}
+          iconColor="text-blue-600 dark:text-blue-400"
+        />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {showFilters && (
-          <div className="lg:col-span-1">
-            <DocumentFiltersPanel
-              filters={filters}
-              onFiltersChange={setFilters}
-            />
+        <InfoNote variant="tip">
+          <p>
+            <strong>Document Processing:</strong> Documents go through several
+            stages: ingestion → processing → analysis. Only processed documents
+            have sentiment scores and cluster assignments. Click any document to
+            view full details including raw text, sentiment analysis, and
+            cluster memberships.
+          </p>
+        </InfoNote>
+
+        {hasActiveFilters && (
+          <InfoNote variant="info">
+            <p>
+              <strong>Filtering Active:</strong> You're viewing a filtered
+              subset of documents. Use the filters above to refine by source
+              type, sentiment range, cluster membership, processing status, or
+              specific ingestion event.
+            </p>
+          </InfoNote>
+        )}
+
+        <div className="animate-in fade-in-0 slide-in-from-top-2 duration-300">
+          <DocumentFiltersHorizontal
+            filters={filters}
+            onFiltersChange={setFilters}
+          />
+        </div>
+
+        {documentsData && documentsData.documents.length > 0 && (
+          <div
+            className="animate-in fade-in-0 slide-in-from-bottom-2"
+            style={{ animationDelay: "50ms" }}
+          >
+            <SourceDistribution documents={documentsData.documents} />
           </div>
         )}
 
-        <div className={showFilters ? "lg:col-span-3" : "lg:col-span-4"}>
+        <div
+          className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: "100ms" }}
+        >
           <DocumentsTable
             filters={filters}
             onFiltersChange={setFilters}
             onDocumentClick={setSelectedDocumentId}
           />
         </div>
-      </div>
 
-      <DocumentDetailDrawer
-        documentId={selectedDocumentId}
-        onClose={() => setSelectedDocumentId(null)}
-      />
-    </div>
+        <DocumentDetailDrawer
+          documentId={selectedDocumentId}
+          onClose={() => setSelectedDocumentId(null)}
+        />
+      </div>
+    </PageTransition>
   );
 };

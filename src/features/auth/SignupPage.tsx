@@ -8,6 +8,8 @@ import {
   User,
   AlertCircle,
   CheckCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 export const SignupPage = () => {
@@ -17,6 +19,7 @@ export const SignupPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { signUp, isAuthenticated } = useAuthContext();
   const navigate = useNavigate();
@@ -42,12 +45,12 @@ export const SignupPage = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 animate-in fade-in-0 duration-300">
         <div className="w-full max-w-md text-center space-y-6">
-          <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/10 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/10 flex items-center justify-center animate-in zoom-in-95 duration-500">
             <CheckCircle className="w-8 h-8 text-emerald-500" />
           </div>
-          <div>
+          <div className="animate-in slide-in-from-bottom-4 duration-500">
             <h1 className="text-2xl font-semibold text-foreground">
               Check your email
             </h1>
@@ -83,7 +86,7 @@ export const SignupPage = () => {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm animate-in fade-in-0 slide-in-from-top-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -141,14 +144,26 @@ export const SignupPage = () => {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
                 minLength={6}
-                className="w-full h-11 pl-11 pr-4 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                className="w-full h-11 pl-11 pr-11 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
             <p className="text-xs text-muted-foreground">
               Must be at least 6 characters

@@ -25,8 +25,8 @@ const navItems = [
   { path: "/clusters", icon: Layers, label: "Clusters" },
   { path: "/insights", icon: Lightbulb, label: "Insights" },
   { path: "/anomalies", icon: AlertTriangle, label: "Anomalies" },
-  { path: "/umap", icon: Map, label: "UMAP" },
   { path: "/search", icon: Search, label: "Search" },
+  { path: "/umap", icon: Map, label: "UMAP" },
 ];
 
 export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {

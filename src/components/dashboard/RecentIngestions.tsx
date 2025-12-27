@@ -3,8 +3,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useIngestEvents } from "@/hooks/useIngest";
 import { IngestStatusBadge } from "@/components/ingest/IngestStatusBadge";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 export const RecentIngestions = () => {
+  const navigate = useNavigate();
   const { data, isLoading, error } = useIngestEvents({ limit: 5 });
 
   if (isLoading) {
@@ -41,7 +43,7 @@ export const RecentIngestions = () => {
   }
 
   return (
-    <Card>
+    <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
         <CardTitle>Recent Ingestions</CardTitle>
       </CardHeader>
@@ -50,11 +52,12 @@ export const RecentIngestions = () => {
           {data.events.map((event) => (
             <div
               key={event.id}
-              className="flex items-start justify-between gap-3 pb-4 border-b border-border last:border-0 last:pb-0"
+              className="flex items-start justify-between gap-3 pb-4 border-b border-border last:border-0 last:pb-0 hover:bg-muted/30 rounded-lg p-2 -m-2 transition-colors cursor-pointer group"
+              onClick={() => navigate("/ingest")}
             >
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground capitalize">
+                  <span className="text-sm font-medium text-foreground capitalize group-hover:text-primary transition-colors">
                     {event.source || "Unknown"}
                   </span>
                   <IngestStatusBadge status={event.status} />
