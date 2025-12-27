@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link, Navigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { LogIn, Mail, Lock, AlertCircle } from "lucide-react";
+import { LogIn, Mail, Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { signIn, isAuthenticated } = useAuthContext();
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ export const LoginPage = () => {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm animate-in fade-in-0 slide-in-from-top-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -90,13 +91,25 @@ export const LoginPage = () => {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full h-11 pl-11 pr-4 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                className="w-full h-11 pl-11 pr-11 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
           </div>
 

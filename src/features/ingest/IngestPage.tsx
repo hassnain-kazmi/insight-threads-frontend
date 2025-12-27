@@ -1,4 +1,9 @@
 import { useState } from "react";
+import { PageTransition } from "@/components/ui/page-transition";
+import { PageHeader } from "@/components/ui/page-header";
+import { InfoNote } from "@/components/ui/info-note";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Download } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -174,18 +179,11 @@ const IngestEventsTable = () => {
 
   if (error || !data || data.events.length === 0) {
     return (
-      <div className="p-8 text-center">
-        <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-          <Newspaper className="w-8 h-8 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-medium text-foreground mb-2">
-          No ingestion events
-        </h3>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          Trigger your first ingestion job using the form above to see events
-          here.
-        </p>
-      </div>
+      <EmptyState
+        icon={Newspaper}
+        title="No ingestion events"
+        description="Trigger your first ingestion job using the form above to see events here."
+      />
     );
   }
 
@@ -287,15 +285,14 @@ export const IngestPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">
-          Ingestion Management
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Configure and trigger data ingestion from various sources.
-        </p>
-      </div>
+    <PageTransition>
+      <div className="space-y-6">
+        <PageHeader
+          title="Ingestion Management"
+          description="Configure and trigger data ingestion from various sources"
+          icon={Download}
+          iconColor="text-emerald-600 dark:text-emerald-400"
+        />
 
       <Card>
         <CardHeader>
@@ -326,6 +323,17 @@ export const IngestPage = () => {
             </TabsList>
 
             <TabsContent value="rss" className="mt-6">
+              <InfoNote variant="info" className="mb-4">
+                <p>
+                  <strong>RSS Feed Ingestion:</strong> Add one or more RSS feed URLs to ingest blog posts, news articles, 
+                  and other syndicated content. The system will fetch the latest entries from each feed and process them 
+                  for analysis.
+                </p>
+                <p className="mt-2 text-xs">
+                  <strong>Tips:</strong> Use the limit to control how many entries per feed (default: 50). You can add 
+                  multiple feeds to ingest from various sources in one job. Common RSS feed formats include XML and Atom.
+                </p>
+              </InfoNote>
               <RSSIngestForm
                 onSubmit={(params) => handleTrigger("rss", params)}
                 isLoading={triggerMutation.isPending}
@@ -333,6 +341,16 @@ export const IngestPage = () => {
             </TabsContent>
 
             <TabsContent value="hackernews" className="mt-6">
+              <InfoNote variant="info" className="mb-4">
+                <p>
+                  <strong>Hacker News Ingestion:</strong> Fetch stories directly from Hacker News using their public API. 
+                  Choose from Top Stories (most upvoted), New Stories (recently posted), or Best Stories (highest quality).
+                </p>
+                <p className="mt-2 text-xs">
+                  <strong>Use Cases:</strong> Great for tracking tech trends, startup news, and developer discussions. 
+                  The limit controls how many posts to fetch (default: 50). Note that Hacker News rate limits apply.
+                </p>
+              </InfoNote>
               <HackerNewsIngestForm
                 onSubmit={(params) => handleTrigger("hackernews", params)}
                 isLoading={triggerMutation.isPending}
@@ -340,6 +358,17 @@ export const IngestPage = () => {
             </TabsContent>
 
             <TabsContent value="github" className="mt-6">
+              <InfoNote variant="info" className="mb-4">
+                <p>
+                  <strong>GitHub Repository Ingestion:</strong> Ingest commits, issues, pull requests, and releases from 
+                  any public GitHub repository. Specify the owner (user or organization) and repository name.
+                </p>
+                <p className="mt-2 text-xs">
+                  <strong>Content Types:</strong> Select which types to include. You can filter commits by date, and 
+                  choose issue/PR states (open, closed, or all). The limit applies per content type. Use "Commits since" 
+                  to fetch only recent commits (ISO 8601 format).
+                </p>
+              </InfoNote>
               <GitHubIngestForm
                 onSubmit={(params) => handleTrigger("github", params)}
                 isLoading={triggerMutation.isPending}
@@ -357,9 +386,21 @@ export const IngestPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <InfoNote variant="tip" className="mb-4">
+            <p>
+              <strong>Ingestion Workflow:</strong> After triggering an ingestion, the job runs in the background. 
+              Status updates automatically: <strong>Pending</strong> → <strong>Running</strong> → <strong>Completed</strong> or <strong>Failed</strong>.
+            </p>
+            <p className="mt-2 text-xs">
+              <strong>Processing Time:</strong> Ingestion duration depends on the amount of data. Once completed, 
+              documents are processed for sentiment analysis, clustering, and embedding generation. Click any event 
+              to view detailed information including error messages if something went wrong.
+            </p>
+          </InfoNote>
           <IngestEventsTable />
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </PageTransition>
   );
 };

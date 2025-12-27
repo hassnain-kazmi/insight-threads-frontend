@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
+import { PageTransition } from "@/components/ui/page-transition";
+import { PageHeader } from "@/components/ui/page-header";
+import { InfoNote } from "@/components/ui/info-note";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +15,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { SearchResults } from "@/components/search/SearchResults";
 import { DocumentDetailDrawer } from "@/components/documents/DocumentDetailDrawer";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useDebounce } from "@/hooks/useDebounce";
 
 export const SearchPage = () => {
@@ -35,17 +39,29 @@ export const SearchPage = () => {
   const hasActiveSearch = debouncedQuery.trim().length > 0;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">
-          Semantic Search
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Search documents by meaning, not just keywords.
-        </p>
-      </div>
+    <PageTransition>
+      <div className="space-y-6">
+        <PageHeader
+          title="Semantic Search"
+          description="Search documents by meaning, not just keywords. Uses AI embeddings to find semantically similar content."
+          icon={Search}
+          iconColor="text-purple-600 dark:text-purple-400"
+        />
 
-      <div className="space-y-4">
+        <InfoNote variant="info">
+          <p>
+            <strong>How Semantic Search Works:</strong> Unlike keyword search, semantic search understands the meaning 
+            behind your query. It uses AI embeddings to find documents that are conceptually similar, even if they don't 
+            share exact words. For example, searching "machine learning" will also find documents about "AI algorithms" 
+            or "neural networks".
+          </p>
+          <p className="mt-2">
+            <strong>Similarity Score:</strong> Lower scores mean more similar (range: 0-2). Results are sorted by relevance. 
+            Use the threshold filter to control result quality—stricter thresholds return fewer but more relevant results.
+          </p>
+        </InfoNote>
+
+        <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2 duration-300">
         <div className="flex gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
@@ -77,7 +93,7 @@ export const SearchPage = () => {
         </div>
 
         {showThresholdControl && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-lg border border-border bg-card">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-lg border border-border bg-card animate-in slide-in-from-top-2">
             <Label htmlFor="threshold" className="text-sm whitespace-nowrap">
               Similarity Threshold:
             </Label>
@@ -109,37 +125,34 @@ export const SearchPage = () => {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground flex-1">
-              Lower values return only the most similar documents. Range: 0-2
-              (lower = more similar).
+              <strong>Stricter</strong> (lower values) = only very similar documents.{" "}
+              <strong>Looser</strong> (higher values) = more results. Range: 0-2.
             </p>
           </div>
         )}
       </div>
 
-      {hasActiveSearch ? (
-        <SearchResults
-          query={debouncedQuery}
-          similarityThreshold={similarityThreshold}
-          onResultClick={setSelectedDocumentId}
-        />
-      ) : (
-        <div className="bg-card border border-border rounded-xl p-8 text-center">
-          <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-            <Search className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">
-            Start searching
-          </h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Enter a query above to find semantically similar documents.
-          </p>
+        <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: "100ms" }}>
+          {hasActiveSearch ? (
+            <SearchResults
+              query={debouncedQuery}
+              similarityThreshold={similarityThreshold}
+              onResultClick={setSelectedDocumentId}
+            />
+          ) : (
+            <EmptyState
+              icon={Search}
+              title="Start searching"
+              description="Enter a query above to find semantically similar documents."
+            />
+          )}
         </div>
-      )}
 
       <DocumentDetailDrawer
         documentId={selectedDocumentId}
         onClose={() => setSelectedDocumentId(null)}
       />
-    </div>
+      </div>
+    </PageTransition>
   );
 };

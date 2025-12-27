@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -9,21 +8,24 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Filter } from "lucide-react";
 import type { DocumentFilters } from "@/types/api";
 import { useClusters } from "@/hooks/useClusters";
 import { useIngestEvents } from "@/hooks/useIngest";
 import { formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
-interface DocumentFiltersPanelProps {
+interface DocumentFiltersHorizontalProps {
   filters: DocumentFilters;
   onFiltersChange: (filters: DocumentFilters) => void;
+  className?: string;
 }
 
-export const DocumentFiltersPanel = ({
+export const DocumentFiltersHorizontal = ({
   filters,
   onFiltersChange,
-}: DocumentFiltersPanelProps) => {
+  className,
+}: DocumentFiltersHorizontalProps) => {
   const { data: clustersData } = useClusters();
   const { data: ingestEventsData } = useIngestEvents({ limit: 100 });
 
@@ -52,26 +54,33 @@ export const DocumentFiltersPanel = ({
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Filters</CardTitle>
+    <div className={cn("bg-card border border-border rounded-xl p-4 space-y-4", className)}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-medium text-foreground">Filters</span>
           {activeFiltersCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="h-7 text-xs"
-            >
-              <X className="w-3 h-3 mr-1" />
-              Clear ({activeFiltersCount})
-            </Button>
+            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+              {activeFiltersCount} active
+            </span>
           )}
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Processed Status</Label>
+        {activeFiltersCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            className="h-7 text-xs"
+          >
+            <X className="w-3 h-3 mr-1" />
+            Clear
+          </Button>
+        )}
+      </div>
+      
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium text-muted-foreground">Status</Label>
           <Select
             value={
               filters.processed === undefined
@@ -88,7 +97,7 @@ export const DocumentFiltersPanel = ({
               }
             }}
           >
-            <SelectTrigger className="h-8 text-xs">
+            <SelectTrigger className="h-9 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -99,8 +108,8 @@ export const DocumentFiltersPanel = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Source Type</Label>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium text-muted-foreground">Source</Label>
           <Select
             value={filters.source_type || "all"}
             onValueChange={(value) =>
@@ -110,7 +119,7 @@ export const DocumentFiltersPanel = ({
               )
             }
           >
-            <SelectTrigger className="h-8 text-xs">
+            <SelectTrigger className="h-9 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -122,8 +131,8 @@ export const DocumentFiltersPanel = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Cluster</Label>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium text-muted-foreground">Cluster</Label>
           <Select
             value={filters.cluster_id || "all"}
             onValueChange={(value) =>
@@ -133,7 +142,7 @@ export const DocumentFiltersPanel = ({
               )
             }
           >
-            <SelectTrigger className="h-8 text-xs">
+            <SelectTrigger className="h-9 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -147,8 +156,8 @@ export const DocumentFiltersPanel = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Ingest Event</Label>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium text-muted-foreground">Event</Label>
           <Select
             value={filters.ingest_event_id || "all"}
             onValueChange={(value) =>
@@ -158,75 +167,67 @@ export const DocumentFiltersPanel = ({
               )
             }
           >
-            <SelectTrigger className="h-8 text-xs">
+            <SelectTrigger className="h-9 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Events</SelectItem>
               {ingestEventsData?.events.map((event) => (
                 <SelectItem key={event.id} value={event.id}>
-                  {event.source || "Unknown"} -{" "}
-                  {formatDate(event.started_at)}
+                  {event.source || "Unknown"} - {formatDate(event.started_at)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        <div className="space-y-3">
-          <Label className="text-xs font-medium">Sentiment Range</Label>
-          <div className="space-y-2">
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">
-                Min (-1 to 1)
-              </Label>
-              <Input
-                type="number"
-                step="0.1"
-                min="-1"
-                max="1"
-                value={filters.sentiment_min ?? ""}
-                onChange={(e) => {
-                  const value =
-                    e.target.value === ""
-                      ? undefined
-                      : parseFloat(e.target.value);
-                  handleFilterChange(
-                    "sentiment_min",
-                    value !== undefined && !isNaN(value) ? value : undefined
-                  );
-                }}
-                placeholder="-1.0"
-                className="h-8 text-xs"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">
-                Max (-1 to 1)
-              </Label>
-              <Input
-                type="number"
-                step="0.1"
-                min="-1"
-                max="1"
-                value={filters.sentiment_max ?? ""}
-                onChange={(e) => {
-                  const value =
-                    e.target.value === ""
-                      ? undefined
-                      : parseFloat(e.target.value);
-                  handleFilterChange(
-                    "sentiment_max",
-                    value !== undefined && !isNaN(value) ? value : undefined
-                  );
-                }}
-                placeholder="1.0"
-                className="h-8 text-xs"
-              />
-            </div>
-          </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium text-muted-foreground">Sentiment Min</Label>
+          <Input
+            type="number"
+            step="0.1"
+            min="-1"
+            max="1"
+            value={filters.sentiment_min ?? ""}
+            onChange={(e) => {
+              const value =
+                e.target.value === ""
+                  ? undefined
+                  : parseFloat(e.target.value);
+              handleFilterChange(
+                "sentiment_min",
+                value !== undefined && !isNaN(value) ? value : undefined
+              );
+            }}
+            placeholder="-1.0"
+            className="h-9 text-xs"
+          />
         </div>
-      </CardContent>
-    </Card>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium text-muted-foreground">Sentiment Max</Label>
+          <Input
+            type="number"
+            step="0.1"
+            min="-1"
+            max="1"
+            value={filters.sentiment_max ?? ""}
+            onChange={(e) => {
+              const value =
+                e.target.value === ""
+                  ? undefined
+                  : parseFloat(e.target.value);
+              handleFilterChange(
+                "sentiment_max",
+                value !== undefined && !isNaN(value) ? value : undefined
+              );
+            }}
+            placeholder="1.0"
+            className="h-9 text-xs"
+          />
+        </div>
+      </div>
+    </div>
   );
 };
+

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { cn } from "@/lib/utils";
 
 export const MainLayout = () => {
@@ -37,7 +39,9 @@ export const MainLayout = () => {
           sidebarCollapsed ? "lg:pl-16" : "lg:pl-64",
         )}
       >
+        <ScrollToTop />
         <div className="p-4 lg:p-6">
+          <Breadcrumb />
           <Outlet />
         </div>
       </main>

@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { AnomalyFiltersPanel } from "@/components/anomalies/AnomalyFilters";
+import { AlertTriangle } from "lucide-react";
+import { PageTransition } from "@/components/ui/page-transition";
+import { PageHeader } from "@/components/ui/page-header";
+import { InfoNote } from "@/components/ui/info-note";
+import { AnomalyFiltersHorizontal } from "@/components/anomalies/AnomalyFiltersHorizontal";
 import { AnomaliesTable } from "@/components/anomalies/AnomaliesTable";
+import { AnomalyTimeline } from "@/components/anomalies/AnomalyTimeline";
+import { useAnomalies } from "@/hooks/useAnomalies";
 import type { AnomalyFilters } from "@/types/api";
 import { useNavigate } from "react-router-dom";
 
@@ -12,38 +16,74 @@ export const AnomaliesPage = () => {
     limit: 50,
     offset: 0,
   });
-  const [showFilters, setShowFilters] = useState(true);
+
+  const { data: anomaliesData } = useAnomalies({ limit: 1000, offset: 0 });
 
   const handleClusterClick = (clusterId: string) => {
     navigate(`/clusters/${clusterId}`);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Anomalies</h1>
-          <p className="text-muted-foreground mt-1">
-            Monitor detected anomalies in your data trends.
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
-          <Filter className="w-4 h-4 mr-2" />
-          {showFilters ? "Hide" : "Show"} Filters
-        </Button>
-      </div>
+    <PageTransition>
+      <div className="space-y-6">
+        <PageHeader
+          title="Anomalies"
+          description="Monitor detected anomalies in your data trends"
+          icon={AlertTriangle}
+          iconColor="text-amber-600 dark:text-amber-400"
+        />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {showFilters && (
-          <div className="lg:col-span-1">
-            <AnomalyFiltersPanel
-              filters={filters}
-              onFiltersChange={setFilters}
-            />
+        <InfoNote variant="warning">
+          <p>
+            <strong>Anomaly Detection Explained:</strong> Anomalies are unusual
+            patterns or outliers detected in your data trends using statistical
+            analysis. They may indicate:
+          </p>
+          <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
+            <li>
+              <strong>Emerging Topics:</strong> Sudden spikes in mentions of new
+              subjects
+            </li>
+            <li>
+              <strong>Sentiment Shifts:</strong> Unexpected changes in public
+              opinion or tone
+            </li>
+            <li>
+              <strong>Data Quality Issues:</strong> Errors or inconsistencies in
+              ingestion
+            </li>
+            <li>
+              <strong>Significant Events:</strong> Real-world events causing
+              unusual activity
+            </li>
+          </ul>
+          <p className="mt-2 text-xs">
+            <strong>Severity Scores:</strong> Higher scores (0.7+) indicate more
+            significant anomalies that warrant immediate attention. Click on any
+            anomaly to view its cluster and investigate further.
+          </p>
+        </InfoNote>
+
+        <div className="animate-in fade-in-0 slide-in-from-top-2 duration-300">
+          <AnomalyFiltersHorizontal
+            filters={filters}
+            onFiltersChange={setFilters}
+          />
+        </div>
+
+        {anomaliesData && anomaliesData.anomalies.length > 0 && (
+          <div
+            className="animate-in fade-in-0 slide-in-from-bottom-2"
+            style={{ animationDelay: "50ms" }}
+          >
+            <AnomalyTimeline anomalies={anomaliesData.anomalies} days={30} />
           </div>
         )}
 
-        <div className={showFilters ? "lg:col-span-3" : "lg:col-span-4"}>
+        <div
+          className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: "100ms" }}
+        >
           <AnomaliesTable
             filters={filters}
             onFiltersChange={setFilters}
@@ -51,6 +91,6 @@ export const AnomaliesPage = () => {
           />
         </div>
       </div>
-    </div>
+    </PageTransition>
   );
 };

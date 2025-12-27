@@ -18,9 +18,15 @@ import {
   ExternalLink,
   AlertTriangle,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useAnomalies } from "@/hooks/useAnomalies";
 import type { AnomalyFilters, AnomalyResponse } from "@/types/api";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { formatDate, formatDateTime, calculatePagination } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 interface AnomaliesTableProps {
@@ -86,17 +92,40 @@ const AnomalyRow = ({ anomaly, onClusterClick }: AnomalyRowProps) => {
           </div>
         </TableCell>
         <TableCell>
-          <Badge
-            className={cn(
-              "text-xs font-medium border",
-              getSeverityColor(anomaly.score)
-            )}
-          >
-            {getSeverityLabel(anomaly.score)}
-          </Badge>
-          <span className="ml-2 text-xs text-muted-foreground">
-            ({anomaly.score.toFixed(2)})
-          </span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    className={cn(
+                      "text-xs font-medium border cursor-help",
+                      getSeverityColor(anomaly.score)
+                    )}
+                  >
+                    {getSeverityLabel(anomaly.score)}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    ({anomaly.score.toFixed(2)})
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  <strong>{getSeverityLabel(anomaly.score)}</strong> severity
+                </p>
+                <p className="text-xs mt-1">
+                  {anomaly.score >= 0.8
+                    ? "Critical: Requires immediate attention"
+                    : anomaly.score >= 0.5
+                    ? "High: Significant anomaly detected"
+                    : anomaly.score >= 0.3
+                    ? "Medium: Moderate anomaly"
+                    : "Low: Minor anomaly"}
+                </p>
+                <p className="text-xs mt-1">Score: {anomaly.score.toFixed(3)}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </TableCell>
         <TableCell>
           {anomaly.type ? (
@@ -136,9 +165,22 @@ const AnomalyRow = ({ anomaly, onClusterClick }: AnomalyRowProps) => {
               <div className="text-xs font-medium text-foreground mb-2">
                 Metadata
               </div>
-              <pre className="text-xs bg-background border border-border rounded-md p-3 overflow-x-auto font-mono text-muted-foreground">
-                {JSON.stringify(anomaly.anomaly_metadata, null, 2)}
-              </pre>
+              {anomaly.anomaly_metadata && typeof anomaly.anomaly_metadata === "object" ? (
+                <div className="text-xs bg-background border border-border rounded-md p-3 space-y-1">
+                  {Object.entries(anomaly.anomaly_metadata).map(([key, value]) => (
+                    <div key={key} className="flex items-start gap-2">
+                      <span className="font-medium text-foreground min-w-[100px]">{key}:</span>
+                      <span className="text-muted-foreground break-words">
+                        {typeof value === "object" ? JSON.stringify(value, null, 2) : String(value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <pre className="text-xs bg-background border border-border rounded-md p-3 overflow-x-auto font-mono text-muted-foreground">
+                  {JSON.stringify(anomaly.anomaly_metadata, null, 2)}
+                </pre>
+              )}
             </div>
           </TableCell>
         </TableRow>
@@ -154,9 +196,9 @@ export const AnomaliesTable = ({
 }: AnomaliesTableProps) => {
   const { data, isLoading, error } = useAnomalies(filters);
 
-  const pageSize = filters.limit || 50;
-  const currentPage = Math.floor((filters.offset || 0) / pageSize) + 1;
-  const totalPages = data ? Math.ceil(data.total / pageSize) : 0;
+  const { pageSize, currentPage, totalPages, startItem, endItem } = data
+    ? calculatePagination(filters.offset, filters.limit, data.total)
+    : { pageSize: filters.limit || 50, currentPage: 1, totalPages: 0, startItem: 0, endItem: 0 };
 
   const handlePageChange = (newPage: number) => {
     const newOffset = (newPage - 1) * pageSize;
@@ -261,9 +303,7 @@ export const AnomaliesTable = ({
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Showing {(filters.offset || 0) + 1} to{" "}
-            {Math.min((filters.offset || 0) + pageSize, data.total)} of{" "}
-            {data.total} anomalies
+            Showing {startItem} to {endItem} of {data.total} anomalies
           </div>
           <div className="flex items-center gap-2">
             <Button

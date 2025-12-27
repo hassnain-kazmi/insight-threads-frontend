@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useDocument } from "@/hooks/useDocuments";
 import { formatDistanceToNow } from "date-fns";
 import { ExternalLink, TrendingUp } from "lucide-react";
+import { getSentimentInfo } from "@/lib/utils";
 
 interface DocumentDetailDrawerProps {
   documentId: string | null;
@@ -19,26 +20,23 @@ interface DocumentDetailDrawerProps {
 const SentimentScore = ({ score }: { score: number | null }) => {
   if (score === null) return <span className="text-muted-foreground">N/A</span>;
 
-  const getSentimentColor = (score: number) => {
-    if (score > 0.3) return "text-emerald-600 dark:text-emerald-400";
-    if (score < -0.3) return "text-red-600 dark:text-red-400";
-    return "text-slate-600 dark:text-slate-400";
-  };
-
-  const getSentimentLabel = (score: number) => {
-    if (score > 0.3) return "Positive";
-    if (score < -0.3) return "Negative";
-    return "Neutral";
-  };
+  const { variant, label, description } = getSentimentInfo(score);
 
   return (
     <div className="flex items-center gap-2">
-      <span className={`font-medium ${getSentimentColor(score)}`}>
+      <span className={`font-medium ${
+        variant === "positive"
+          ? "text-emerald-600 dark:text-emerald-400"
+          : variant === "negative"
+          ? "text-red-600 dark:text-red-400"
+          : "text-slate-600 dark:text-slate-400"
+      }`}>
         {score.toFixed(3)}
       </span>
-      <Badge variant="outline" className="text-xs">
-        {getSentimentLabel(score)}
+      <Badge variant={variant === "positive" ? "default" : variant === "negative" ? "destructive" : "secondary"} className="text-xs">
+        {label}
       </Badge>
+      <span className="text-xs text-muted-foreground">({description})</span>
     </div>
   );
 };
@@ -178,13 +176,19 @@ export const DocumentDetailDrawer = ({
                       {document.cluster_memberships.map((membership) => (
                         <div
                           key={membership.cluster_id}
-                          className="flex items-center justify-between p-3 rounded-lg border border-border bg-card"
+                          className="flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono text-muted-foreground">
-                              {membership.cluster_id.slice(0, 8)}...
+                          <button
+                            onClick={() => {
+                              window.location.href = `/clusters/${membership.cluster_id}`;
+                            }}
+                            className="flex items-center gap-2 text-xs font-medium text-primary hover:underline"
+                          >
+                            <span className="font-mono">
+                              Cluster {membership.cluster_id.slice(0, 8)}...
                             </span>
-                          </div>
+                            <ExternalLink className="w-3 h-3" />
+                          </button>
                           {membership.membership_strength !== null && (
                             <Badge variant="outline" className="text-xs">
                               Strength:{" "}
