@@ -45,9 +45,7 @@ export const RSSIngestForm = ({ onSubmit, isLoading }: RSSIngestFormProps) => {
       );
       setFeedUrls([""]);
       setLimit(50);
-    } catch {
-      // Error handled by parent mutation
-    }
+    } catch {}
   };
 
   const isValid = feedUrls.some((url) => url.trim() !== "");

@@ -9,21 +9,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { X, Filter } from "lucide-react";
-import type { AnomalyFilters } from "@/types/api";
+import type { AnomalyFilters as AnomalyFiltersType } from "@/types/api";
 import { useClusters } from "@/hooks/useClusters";
 import { cn } from "@/lib/utils";
 
-interface AnomalyFiltersHorizontalProps {
-  filters: AnomalyFilters;
-  onFiltersChange: (filters: AnomalyFilters) => void;
+interface AnomalyFiltersComponentProps {
+  filters: AnomalyFiltersType;
+  onFiltersChange: (filters: AnomalyFiltersType) => void;
   className?: string;
 }
 
-export const AnomalyFiltersHorizontal = ({
+export const AnomalyFilters = ({
   filters,
   onFiltersChange,
   className,
-}: AnomalyFiltersHorizontalProps) => {
+}: AnomalyFiltersComponentProps) => {
   const { data: clustersData } = useClusters();
 
   const activeFiltersCount = [
@@ -33,7 +33,10 @@ export const AnomalyFiltersHorizontal = ({
     filters.end_date,
   ].filter(Boolean).length;
 
-  const handleFilterChange = (key: keyof AnomalyFilters, value: unknown) => {
+  const handleFilterChange = (
+    key: keyof AnomalyFiltersType,
+    value: unknown
+  ) => {
     onFiltersChange({
       ...filters,
       [key]: value === "" || value === null ? undefined : value,
@@ -43,7 +46,7 @@ export const AnomalyFiltersHorizontal = ({
 
   const clearFilters = () => {
     onFiltersChange({
-      limit: filters.limit,
+      limit: filters.limit || 50,
       offset: 0,
     });
   };

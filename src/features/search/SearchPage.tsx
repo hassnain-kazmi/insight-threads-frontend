@@ -28,7 +28,7 @@ export const SearchPage = () => {
   );
   const [showThresholdControl, setShowThresholdControl] = useState(false);
 
-  const debouncedQuery = useDebounce(query, 300);
+  const debouncedQuery = useDebounce(query, 200);
 
   useEffect(() => {
     if (!query.trim()) {

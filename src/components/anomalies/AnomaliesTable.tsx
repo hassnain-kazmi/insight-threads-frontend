@@ -97,8 +97,9 @@ const AnomalyRow = ({ anomaly, onClusterClick }: AnomalyRowProps) => {
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-2">
                   <Badge
+                    variant="outline"
                     className={cn(
-                      "text-xs font-medium border cursor-help",
+                      "text-xs font-medium cursor-help hover:opacity-100",
                       getSeverityColor(anomaly.score)
                     )}
                   >
@@ -122,7 +123,9 @@ const AnomalyRow = ({ anomaly, onClusterClick }: AnomalyRowProps) => {
                     ? "Medium: Moderate anomaly"
                     : "Low: Minor anomaly"}
                 </p>
-                <p className="text-xs mt-1">Score: {anomaly.score.toFixed(3)}</p>
+                <p className="text-xs mt-1">
+                  Score: {anomaly.score.toFixed(3)}
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -165,16 +168,23 @@ const AnomalyRow = ({ anomaly, onClusterClick }: AnomalyRowProps) => {
               <div className="text-xs font-medium text-foreground mb-2">
                 Metadata
               </div>
-              {anomaly.anomaly_metadata && typeof anomaly.anomaly_metadata === "object" ? (
+              {anomaly.anomaly_metadata &&
+              typeof anomaly.anomaly_metadata === "object" ? (
                 <div className="text-xs bg-background border border-border rounded-md p-3 space-y-1">
-                  {Object.entries(anomaly.anomaly_metadata).map(([key, value]) => (
-                    <div key={key} className="flex items-start gap-2">
-                      <span className="font-medium text-foreground min-w-[100px]">{key}:</span>
-                      <span className="text-muted-foreground break-words">
-                        {typeof value === "object" ? JSON.stringify(value, null, 2) : String(value)}
-                      </span>
-                    </div>
-                  ))}
+                  {Object.entries(anomaly.anomaly_metadata).map(
+                    ([key, value]) => (
+                      <div key={key} className="flex items-start gap-2">
+                        <span className="font-medium text-foreground min-w-[100px]">
+                          {key}:
+                        </span>
+                        <span className="text-muted-foreground break-words">
+                          {typeof value === "object"
+                            ? JSON.stringify(value, null, 2)
+                            : String(value)}
+                        </span>
+                      </div>
+                    )
+                  )}
                 </div>
               ) : (
                 <pre className="text-xs bg-background border border-border rounded-md p-3 overflow-x-auto font-mono text-muted-foreground">
@@ -198,7 +208,13 @@ export const AnomaliesTable = ({
 
   const { pageSize, currentPage, totalPages, startItem, endItem } = data
     ? calculatePagination(filters.offset, filters.limit, data.total)
-    : { pageSize: filters.limit || 50, currentPage: 1, totalPages: 0, startItem: 0, endItem: 0 };
+    : {
+        pageSize: filters.limit || 50,
+        currentPage: 1,
+        totalPages: 0,
+        startItem: 0,
+        endItem: 0,
+      };
 
   const handlePageChange = (newPage: number) => {
     const newOffset = (newPage - 1) * pageSize;

@@ -77,7 +77,10 @@ const IngestEventDetailModalContent = ({ eventId }: { eventId: string }) => {
                 Status
               </p>
               <div className="mt-1">
-                <IngestStatusBadge status={event.status} />
+                <IngestStatusBadge
+                  status={event.status}
+                  startedAt={event.started_at}
+                />
               </div>
             </div>
             <div>
@@ -92,9 +95,7 @@ const IngestEventDetailModalContent = ({ eventId }: { eventId: string }) => {
               <p className="text-sm font-medium text-muted-foreground">
                 Started At
               </p>
-              <p className="mt-1 text-sm">
-                {formatDateTime(event.started_at)}
-              </p>
+              <p className="mt-1 text-sm">{formatDateTime(event.started_at)}</p>
             </div>
             {event.completed_at && (
               <div>
@@ -119,7 +120,7 @@ const IngestEventDetailModalContent = ({ eventId }: { eventId: string }) => {
                       }),
                       { format: ["hours", "minutes", "seconds"] }
                     ) || "Less than a second"
-                  : event.status === "running"
+                  : event.status === "running" || event.status === "processing"
                   ? `Running for ${formatDistanceToNow(
                       new Date(event.started_at),
                       {
@@ -211,7 +212,10 @@ const IngestEventsTable = () => {
                   {event.source || "Unknown"}
                 </TableCell>
                 <TableCell>
-                  <IngestStatusBadge status={event.status} />
+                  <IngestStatusBadge
+                    status={event.status}
+                    startedAt={event.started_at}
+                  />
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDistanceToNow(new Date(event.started_at), {
@@ -227,7 +231,8 @@ const IngestEventsTable = () => {
                         }),
                         { format: ["hours", "minutes"] }
                       ) || "Less than a minute"
-                    : event.status === "running"
+                    : event.status === "running" ||
+                      event.status === "processing"
                     ? `Running...`
                     : "—"}
                 </TableCell>
@@ -264,9 +269,7 @@ const IngestEventsTable = () => {
 };
 
 export const IngestPage = () => {
-  const [activeSource, setActiveSource] = useState<IngestionSource | null>(
-    null
-  );
+  const [activeSource, setActiveSource] = useState<IngestionSource>("rss");
   const triggerMutation = useTriggerIngestion();
 
   const handleTrigger = async (
@@ -274,14 +277,26 @@ export const IngestPage = () => {
     params: RSSParams | HackerNewsParams | GitHubParams
   ) => {
     try {
+      if (source === "github") {
+        const githubParams = params as GitHubParams;
+        if (!githubParams.repos || githubParams.repos.length === 0) {
+          return;
+        }
+        const invalidRepos = githubParams.repos.filter(
+          (r) =>
+            !r.owner || r.owner.length === 0 || !r.repo || r.repo.length === 0
+        );
+        if (invalidRepos.length > 0) {
+          return;
+        }
+      }
+
       await triggerMutation.mutateAsync({
         source,
         source_params: params,
       });
-      setActiveSource(null);
-    } catch {
-      // feedback can be added via toast/alert if needed
-    }
+      setActiveSource("rss");
+    } catch {}
   };
 
   return (
@@ -294,112 +309,130 @@ export const IngestPage = () => {
           iconColor="text-emerald-600 dark:text-emerald-400"
         />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Trigger New Ingestion</CardTitle>
-          <CardDescription>
-            Select a source type and configure the ingestion parameters.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            value={activeSource || undefined}
-            onValueChange={(value) => setActiveSource(value as IngestionSource)}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="rss" className="gap-2">
-                <Rss className="w-4 h-4" />
-                RSS Feeds
-              </TabsTrigger>
-              <TabsTrigger value="hackernews" className="gap-2">
-                <Newspaper className="w-4 h-4" />
-                Hacker News
-              </TabsTrigger>
-              <TabsTrigger value="github" className="gap-2">
-                <Github className="w-4 h-4" />
-                GitHub
-              </TabsTrigger>
-            </TabsList>
+        <Card>
+          <CardHeader>
+            <CardTitle>Trigger New Ingestion</CardTitle>
+            <CardDescription>
+              Select a source type and configure the ingestion parameters.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs
+              value={activeSource}
+              onValueChange={(value) =>
+                setActiveSource(value as IngestionSource)
+              }
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="rss" className="gap-2">
+                  <Rss className="w-4 h-4" />
+                  RSS Feeds
+                </TabsTrigger>
+                <TabsTrigger value="hackernews" className="gap-2">
+                  <Newspaper className="w-4 h-4" />
+                  Hacker News
+                </TabsTrigger>
+                <TabsTrigger value="github" className="gap-2">
+                  <Github className="w-4 h-4" />
+                  GitHub
+                </TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="rss" className="mt-6">
-              <InfoNote variant="info" className="mb-4">
-                <p>
-                  <strong>RSS Feed Ingestion:</strong> Add one or more RSS feed URLs to ingest blog posts, news articles, 
-                  and other syndicated content. The system will fetch the latest entries from each feed and process them 
-                  for analysis.
-                </p>
-                <p className="mt-2 text-xs">
-                  <strong>Tips:</strong> Use the limit to control how many entries per feed (default: 50). You can add 
-                  multiple feeds to ingest from various sources in one job. Common RSS feed formats include XML and Atom.
-                </p>
-              </InfoNote>
-              <RSSIngestForm
-                onSubmit={(params) => handleTrigger("rss", params)}
-                isLoading={triggerMutation.isPending}
-              />
-            </TabsContent>
+              <TabsContent value="rss" className="mt-6">
+                <InfoNote variant="info" className="mb-4">
+                  <p>
+                    <strong>RSS Feed Ingestion:</strong> Add one or more RSS
+                    feed URLs to ingest blog posts, news articles, and other
+                    syndicated content. The system will fetch the latest entries
+                    from each feed and process them for analysis.
+                  </p>
+                  <p className="mt-2 text-xs">
+                    <strong>Tips:</strong> Use the limit to control how many
+                    entries per feed (default: 50). You can add multiple feeds
+                    to ingest from various sources in one job. Common RSS feed
+                    formats include XML and Atom.
+                  </p>
+                </InfoNote>
+                <RSSIngestForm
+                  onSubmit={(params) => handleTrigger("rss", params)}
+                  isLoading={triggerMutation.isPending}
+                />
+              </TabsContent>
 
-            <TabsContent value="hackernews" className="mt-6">
-              <InfoNote variant="info" className="mb-4">
-                <p>
-                  <strong>Hacker News Ingestion:</strong> Fetch stories directly from Hacker News using their public API. 
-                  Choose from Top Stories (most upvoted), New Stories (recently posted), or Best Stories (highest quality).
-                </p>
-                <p className="mt-2 text-xs">
-                  <strong>Use Cases:</strong> Great for tracking tech trends, startup news, and developer discussions. 
-                  The limit controls how many posts to fetch (default: 50). Note that Hacker News rate limits apply.
-                </p>
-              </InfoNote>
-              <HackerNewsIngestForm
-                onSubmit={(params) => handleTrigger("hackernews", params)}
-                isLoading={triggerMutation.isPending}
-              />
-            </TabsContent>
+              <TabsContent value="hackernews" className="mt-6">
+                <InfoNote variant="info" className="mb-4">
+                  <p>
+                    <strong>Hacker News Ingestion:</strong> Fetch stories
+                    directly from Hacker News using their public API. Choose
+                    from Top Stories (most upvoted), New Stories (recently
+                    posted), or Best Stories (highest quality).
+                  </p>
+                  <p className="mt-2 text-xs">
+                    <strong>Use Cases:</strong> Great for tracking tech trends,
+                    startup news, and developer discussions. The limit controls
+                    how many posts to fetch (default: 50). Note that Hacker News
+                    rate limits apply.
+                  </p>
+                </InfoNote>
+                <HackerNewsIngestForm
+                  onSubmit={(params) => handleTrigger("hackernews", params)}
+                  isLoading={triggerMutation.isPending}
+                />
+              </TabsContent>
 
-            <TabsContent value="github" className="mt-6">
-              <InfoNote variant="info" className="mb-4">
-                <p>
-                  <strong>GitHub Repository Ingestion:</strong> Ingest commits, issues, pull requests, and releases from 
-                  any public GitHub repository. Specify the owner (user or organization) and repository name.
-                </p>
-                <p className="mt-2 text-xs">
-                  <strong>Content Types:</strong> Select which types to include. You can filter commits by date, and 
-                  choose issue/PR states (open, closed, or all). The limit applies per content type. Use "Commits since" 
-                  to fetch only recent commits (ISO 8601 format).
-                </p>
-              </InfoNote>
-              <GitHubIngestForm
-                onSubmit={(params) => handleTrigger("github", params)}
-                isLoading={triggerMutation.isPending}
-              />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+              <TabsContent value="github" className="mt-6">
+                <InfoNote variant="info" className="mb-4">
+                  <p>
+                    <strong>GitHub Repository Ingestion:</strong> Ingest
+                    commits, issues, pull requests, and releases from any public
+                    GitHub repository. Specify the owner (user or organization)
+                    and repository name.
+                  </p>
+                  <p className="mt-2 text-xs">
+                    <strong>Content Types:</strong> Select which types to
+                    include. You can filter commits by date, and choose issue/PR
+                    states (open, closed, or all). The limit applies per content
+                    type. Use "Commits since" to fetch only recent commits (ISO
+                    8601 format).
+                  </p>
+                </InfoNote>
+                <GitHubIngestForm
+                  onSubmit={(params) => handleTrigger("github", params)}
+                  isLoading={triggerMutation.isPending}
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Ingestion Events</CardTitle>
-          <CardDescription>
-            View and monitor all ingestion events and their status.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <InfoNote variant="tip" className="mb-4">
-            <p>
-              <strong>Ingestion Workflow:</strong> After triggering an ingestion, the job runs in the background. 
-              Status updates automatically: <strong>Pending</strong> → <strong>Running</strong> → <strong>Completed</strong> or <strong>Failed</strong>.
-            </p>
-            <p className="mt-2 text-xs">
-              <strong>Processing Time:</strong> Ingestion duration depends on the amount of data. Once completed, 
-              documents are processed for sentiment analysis, clustering, and embedding generation. Click any event 
-              to view detailed information including error messages if something went wrong.
-            </p>
-          </InfoNote>
-          <IngestEventsTable />
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Ingestion Events</CardTitle>
+            <CardDescription>
+              View and monitor all ingestion events and their status.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <InfoNote variant="tip" className="mb-4">
+              <p>
+                <strong>Ingestion Workflow:</strong> After triggering an
+                ingestion, the job runs in the background. Status updates
+                automatically: <strong>Pending</strong> →{" "}
+                <strong>Processing</strong> → <strong>Running</strong> →{" "}
+                <strong>Completed</strong> or <strong>Failed</strong>.
+              </p>
+              <p className="mt-2 text-xs">
+                <strong>Processing Time:</strong> Ingestion duration depends on
+                the amount of data. Once completed, documents are processed for
+                sentiment analysis, clustering, and embedding generation. Click
+                any event to view detailed information including error messages
+                if something went wrong.
+              </p>
+            </InfoNote>
+            <IngestEventsTable />
+          </CardContent>
+        </Card>
       </div>
     </PageTransition>
   );

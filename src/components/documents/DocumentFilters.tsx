@@ -9,23 +9,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { X, Filter } from "lucide-react";
-import type { DocumentFilters } from "@/types/api";
+import type { DocumentFilters as DocumentFiltersType } from "@/types/api";
 import { useClusters } from "@/hooks/useClusters";
 import { useIngestEvents } from "@/hooks/useIngest";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
-interface DocumentFiltersHorizontalProps {
-  filters: DocumentFilters;
-  onFiltersChange: (filters: DocumentFilters) => void;
+interface DocumentFiltersProps {
+  filters: DocumentFiltersType;
+  onFiltersChange: (filters: DocumentFiltersType) => void;
   className?: string;
 }
 
-export const DocumentFiltersHorizontal = ({
+export const DocumentFilters = ({
   filters,
   onFiltersChange,
   className,
-}: DocumentFiltersHorizontalProps) => {
+}: DocumentFiltersProps) => {
   const { data: clustersData } = useClusters();
   const { data: ingestEventsData } = useIngestEvents({ limit: 100 });
 
@@ -38,7 +38,10 @@ export const DocumentFiltersHorizontal = ({
     filters.sentiment_max !== undefined,
   ].filter(Boolean).length;
 
-  const handleFilterChange = (key: keyof DocumentFilters, value: unknown) => {
+  const handleFilterChange = (
+    key: keyof DocumentFiltersType,
+    value: unknown
+  ) => {
     onFiltersChange({
       ...filters,
       [key]: value === "" || value === null ? undefined : value,
@@ -54,7 +57,12 @@ export const DocumentFiltersHorizontal = ({
   };
 
   return (
-    <div className={cn("bg-card border border-border rounded-xl p-4 space-y-4", className)}>
+    <div
+      className={cn(
+        "bg-card border border-border rounded-xl p-4 space-y-4",
+        className
+      )}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
@@ -77,10 +85,12 @@ export const DocumentFiltersHorizontal = ({
           </Button>
         )}
       </div>
-      
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">Status</Label>
+          <Label className="text-xs font-medium text-muted-foreground">
+            Status
+          </Label>
           <Select
             value={
               filters.processed === undefined
@@ -109,7 +119,9 @@ export const DocumentFiltersHorizontal = ({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">Source</Label>
+          <Label className="text-xs font-medium text-muted-foreground">
+            Source
+          </Label>
           <Select
             value={filters.source_type || "all"}
             onValueChange={(value) =>
@@ -132,7 +144,9 @@ export const DocumentFiltersHorizontal = ({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">Cluster</Label>
+          <Label className="text-xs font-medium text-muted-foreground">
+            Cluster
+          </Label>
           <Select
             value={filters.cluster_id || "all"}
             onValueChange={(value) =>
@@ -157,7 +171,9 @@ export const DocumentFiltersHorizontal = ({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">Event</Label>
+          <Label className="text-xs font-medium text-muted-foreground">
+            Event
+          </Label>
           <Select
             value={filters.ingest_event_id || "all"}
             onValueChange={(value) =>
@@ -182,7 +198,9 @@ export const DocumentFiltersHorizontal = ({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">Sentiment Min</Label>
+          <Label className="text-xs font-medium text-muted-foreground">
+            Sentiment Min
+          </Label>
           <Input
             type="number"
             step="0.1"
@@ -191,9 +209,7 @@ export const DocumentFiltersHorizontal = ({
             value={filters.sentiment_min ?? ""}
             onChange={(e) => {
               const value =
-                e.target.value === ""
-                  ? undefined
-                  : parseFloat(e.target.value);
+                e.target.value === "" ? undefined : parseFloat(e.target.value);
               handleFilterChange(
                 "sentiment_min",
                 value !== undefined && !isNaN(value) ? value : undefined
@@ -205,7 +221,9 @@ export const DocumentFiltersHorizontal = ({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">Sentiment Max</Label>
+          <Label className="text-xs font-medium text-muted-foreground">
+            Sentiment Max
+          </Label>
           <Input
             type="number"
             step="0.1"
@@ -214,9 +232,7 @@ export const DocumentFiltersHorizontal = ({
             value={filters.sentiment_max ?? ""}
             onChange={(e) => {
               const value =
-                e.target.value === ""
-                  ? undefined
-                  : parseFloat(e.target.value);
+                e.target.value === "" ? undefined : parseFloat(e.target.value);
               handleFilterChange(
                 "sentiment_max",
                 value !== undefined && !isNaN(value) ? value : undefined
@@ -230,4 +246,3 @@ export const DocumentFiltersHorizontal = ({
     </div>
   );
 };
-

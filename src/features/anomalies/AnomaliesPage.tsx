@@ -3,7 +3,7 @@ import { AlertTriangle } from "lucide-react";
 import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
 import { InfoNote } from "@/components/ui/info-note";
-import { AnomalyFiltersHorizontal } from "@/components/anomalies/AnomalyFiltersHorizontal";
+import { AnomalyFilters as AnomalyFiltersComponent } from "@/components/anomalies/AnomalyFilters";
 import { AnomaliesTable } from "@/components/anomalies/AnomaliesTable";
 import { AnomalyTimeline } from "@/components/anomalies/AnomalyTimeline";
 import { useAnomalies } from "@/hooks/useAnomalies";
@@ -65,7 +65,7 @@ export const AnomaliesPage = () => {
         </InfoNote>
 
         <div className="animate-in fade-in-0 slide-in-from-top-2 duration-300">
-          <AnomalyFiltersHorizontal
+          <AnomalyFiltersComponent
             filters={filters}
             onFiltersChange={setFilters}
           />

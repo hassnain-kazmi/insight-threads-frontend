@@ -19,7 +19,7 @@ export interface IngestEventResponse {
   source: "rss" | "hackernews" | "github" | null;
   started_at: string;
   completed_at: string | null;
-  status: "pending" | "running" | "completed" | "failed";
+  status: "pending" | "processing" | "running" | "completed" | "failed";
   error_message: string | null;
   updated_at: string;
 }
@@ -41,9 +41,13 @@ export interface HackerNewsParams {
   limit?: number;
 }
 
-export interface GitHubParams {
+export interface GitHubRepo {
   owner: string;
   repo: string;
+}
+
+export interface GitHubParams {
+  repos: GitHubRepo[];
   include_commits?: boolean;
   include_issues?: boolean;
   include_prs?: boolean;

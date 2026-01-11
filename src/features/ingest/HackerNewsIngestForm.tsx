@@ -37,9 +37,7 @@ export const HackerNewsIngestForm = ({
       );
       setEndpoint("topstories");
       setLimit(50);
-    } catch {
-      // Error handled by parent mutation
-    }
+    } catch {}
   };
 
   return (

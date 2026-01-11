@@ -19,5 +19,9 @@ export const useSearch = (query: string, similarityThreshold?: number) => {
       return apiClient.get<SearchResponse>(`/search?${params.toString()}`);
     },
     enabled: query.trim().length > 0,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 };

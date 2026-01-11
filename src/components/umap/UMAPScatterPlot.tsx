@@ -116,9 +116,11 @@ export const UMAPScatterPlot = ({
         <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
           {showGrid && (
             <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="hsl(var(--border))"
+              strokeDasharray="5 5"
+              stroke="#9ca3af"
               opacity={0.3}
+              horizontal={true}
+              vertical={true}
             />
           )}
           <XAxis
@@ -126,16 +128,20 @@ export const UMAPScatterPlot = ({
             dataKey="x"
             name="X"
             domain={xDomain}
-            stroke="hsl(var(--muted-foreground))"
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+            stroke="#6b7280"
+            tick={{ fill: "#6b7280", fontSize: 11 }}
+            axisLine={true}
+            tickLine={true}
           />
           <YAxis
             type="number"
             dataKey="y"
             name="Y"
             domain={yDomain}
-            stroke="hsl(var(--muted-foreground))"
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+            stroke="#6b7280"
+            tick={{ fill: "#6b7280", fontSize: 11 }}
+            axisLine={true}
+            tickLine={true}
           />
           <Tooltip
             content={<CustomTooltip />}
@@ -151,25 +157,19 @@ export const UMAPScatterPlot = ({
             {chartData.map((entry, index) => {
               const color = getClusterColor(entry.cluster_id);
               const isHovered = hoveredIndex === index;
-              const isHighlighted = highlightedClusterId 
-                ? entry.cluster_id === highlightedClusterId 
+              const isHighlighted = highlightedClusterId
+                ? entry.cluster_id === highlightedClusterId
                 : true;
-              const isDimmed = highlightedClusterId 
-                ? entry.cluster_id !== highlightedClusterId 
+              const isDimmed = highlightedClusterId
+                ? entry.cluster_id !== highlightedClusterId
                 : false;
-              
+
               return (
                 <Cell
                   key={entry.document_id}
                   fill={color}
                   opacity={
-                    isHovered 
-                      ? 1 
-                      : isDimmed 
-                        ? 0.2 
-                        : isHighlighted 
-                          ? 0.8 
-                          : 0.7
+                    isHovered ? 1 : isDimmed ? 0.2 : isHighlighted ? 0.8 : 0.7
                   }
                   style={{
                     cursor: onDocumentClick ? "pointer" : "default",
