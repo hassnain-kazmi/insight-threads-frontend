@@ -4,6 +4,7 @@ import { ProgressRing } from "@/components/ui/progress-ring";
 import { FileText, Github, Newspaper, Rss } from "lucide-react";
 import type { DocumentResponse } from "@/types/api";
 import { getSourceTypeFromPath } from "@/lib/utils";
+import { useIngestEvents } from "@/hooks/useIngest";
 
 interface SourceDistributionProps {
   documents: DocumentResponse[];
@@ -17,6 +18,37 @@ const sourceConfig = {
 };
 
 export const SourceDistribution = ({ documents }: SourceDistributionProps) => {
+  const { data: ingestEventsData, isLoading: isLoadingEvents } =
+    useIngestEvents({ limit: 500 });
+
+  const ingestEventSourceMap = useMemo(() => {
+    const map = new Map<string, string | null>();
+    ingestEventsData?.events.forEach((event) => {
+      if (event.id) {
+        map.set(event.id, event.source);
+      }
+    });
+    return map;
+  }, [ingestEventsData]);
+
+  const getDocumentSourceType = useMemo(() => {
+    return (
+      document: DocumentResponse
+    ): "rss" | "hackernews" | "github" | "unknown" => {
+      if (document.ingest_event_id) {
+        const source = ingestEventSourceMap.get(document.ingest_event_id);
+        if (
+          source === "rss" ||
+          source === "hackernews" ||
+          source === "github"
+        ) {
+          return source;
+        }
+      }
+      return getSourceTypeFromPath(document.source_path);
+    };
+  }, [ingestEventSourceMap]);
+
   const distribution = useMemo(() => {
     const counts: Record<string, number> = {
       rss: 0,
@@ -26,33 +58,46 @@ export const SourceDistribution = ({ documents }: SourceDistributionProps) => {
     };
 
     documents.forEach((doc) => {
-      const sourceType = getSourceTypeFromPath(doc.source_path);
-      counts[sourceType]++;
+      const sourceType = getDocumentSourceType(doc);
+      if (sourceType in counts) {
+        counts[sourceType] = (counts[sourceType] || 0) + 1;
+      } else {
+        counts.unknown = (counts.unknown || 0) + 1;
+      }
     });
 
     const total = documents.length;
-    return Object.entries(counts).map(([type, count]) => ({
-      type: type as keyof typeof sourceConfig,
-      count,
-      percentage: total > 0 ? (count / total) * 100 : 0,
-    }));
-  }, [documents]);
+    return Object.entries(counts)
+      .filter(([, count]) => count > 0)
+      .map(([type, count]) => ({
+        type: type as keyof typeof sourceConfig,
+        count,
+        percentage: total > 0 ? (count / total) * 100 : 0,
+      }));
+  }, [documents, getDocumentSourceType]);
 
   const total = documents.length;
 
-  if (total === 0) {
+  if (isLoadingEvents) {
+    return null;
+  }
+
+  if (total === 0 || distribution.length === 0) {
     return null;
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium">Source Distribution</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          Source Distribution
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {distribution.map(({ type, count, percentage }) => {
             const config = sourceConfig[type];
+            if (!config) return null;
             const Icon = config.icon;
             return (
               <div key={type} className="flex flex-col items-center gap-2">
@@ -64,7 +109,10 @@ export const SourceDistribution = ({ documents }: SourceDistributionProps) => {
                   showLabel
                 />
                 <div className="flex items-center gap-1.5 text-xs">
-                  <Icon className="w-3.5 h-3.5" style={{ color: config.color }} />
+                  <Icon
+                    className="w-3.5 h-3.5"
+                    style={{ color: config.color }}
+                  />
                   <span className="font-medium">{config.label}</span>
                 </div>
                 <span className="text-xs text-muted-foreground">
@@ -78,4 +126,3 @@ export const SourceDistribution = ({ documents }: SourceDistributionProps) => {
     </Card>
   );
 };
-

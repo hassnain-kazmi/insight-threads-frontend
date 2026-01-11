@@ -13,8 +13,6 @@ export const SentimentGauge = ({
   className,
 }: SentimentGaugeProps) => {
   const normalizedValue = Math.max(-1, Math.min(1, value));
-  const percentage = ((normalizedValue + 1) / 2) * 100;
-  const angle = (percentage / 100) * 180 - 90;
 
   const color = useMemo(() => {
     if (normalizedValue > 0.3) return "#10b981";
@@ -22,59 +20,78 @@ export const SentimentGauge = ({
     return "#6b7280";
   }, [normalizedValue]);
 
-  const radius = size / 2 - 10;
-  const centerX = size / 2;
-  const centerY = size / 2;
+  const svgWidth = size;
+  const svgHeight = size * 0.6;
+  const radius = size * 0.35;
+  const centerX = svgWidth / 2;
+  const centerY = svgHeight - 5;
 
-  const needleLength = radius * 0.7;
-  const needleAngle = (angle * Math.PI) / 180;
-  const needleX = centerX + needleLength * Math.cos(needleAngle);
-  const needleY = centerY + needleLength * Math.sin(needleAngle);
+  const angle = 180 - ((normalizedValue + 1) / 2) * 180;
+  const angleRad = (angle * Math.PI) / 180;
+
+  const startX = centerX - radius;
+  const startY = centerY;
+  const endX = centerX + radius;
+  const endY = centerY;
+
+  const needleLength = radius * 0.8;
+  const needleX = centerX + needleLength * Math.cos(angleRad);
+  const needleY = centerY - needleLength * Math.sin(angleRad);
 
   return (
-    <div className={cn("relative", className)}>
-      <svg width={size} height={size} className="transform -scale-y-100">
+    <div
+      className={cn("relative flex flex-col items-center w-full", className)}
+    >
+      <svg width={svgWidth} height={svgHeight} className="overflow-visible">
+        <defs>
+          {/* Gradient for the arc - red to gray to green */}
+          <linearGradient
+            id="sentimentGradient"
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="0%"
+          >
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="50%" stopColor="#6b7280" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+        </defs>
+        {/* Background arc with gradient (full semi-circle) */}
         <path
-          d={`M ${centerX - radius} ${centerY} A ${radius} ${radius} 0 0 1 ${
-            centerX + radius
-          } ${centerY}`}
+          d={`M ${startX} ${startY} A ${radius} ${radius} 0 0 1 ${endX} ${endY}`}
           fill="none"
-          stroke="#e5e7eb"
-          strokeWidth="12"
+          stroke="url(#sentimentGradient)"
+          strokeWidth="10"
           strokeLinecap="round"
+          opacity={0.3}
         />
-        <path
-          d={`M ${centerX - radius} ${centerY} A ${radius} ${radius} 0 ${
-            percentage > 50 ? 1 : 0
-          } 1 ${needleX} ${needleY}`}
-          fill="none"
-          stroke={color}
-          strokeWidth="12"
-          strokeLinecap="round"
-          className="transition-all duration-500"
-        />
+        {/* Needle */}
         <line
           x1={centerX}
           y1={centerY}
           x2={needleX}
           y2={needleY}
-          stroke="#1f2937"
+          stroke={color}
           strokeWidth="3"
           strokeLinecap="round"
           className="transition-all duration-500"
         />
-        <circle cx={centerX} cy={centerY} r="6" fill="#1f2937" />
+        {/* Needle tip */}
+        <circle cx={needleX} cy={needleY} r="4" fill={color} />
       </svg>
-      <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-muted-foreground">
-        <span>Negative</span>
-        <span>Neutral</span>
-        <span>Positive</span>
-      </div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-        <div className="text-2xl font-semibold" style={{ color }}>
+      {/* Value display */}
+      <div className="mt-1 text-center">
+        <div className="text-xl font-semibold" style={{ color }}>
           {normalizedValue > 0 ? "+" : ""}
           {normalizedValue.toFixed(2)}
         </div>
+      </div>
+      {/* Labels */}
+      <div className="w-full flex justify-between text-xs text-muted-foreground mt-1 px-1">
+        <span>Negative</span>
+        <span>Neutral</span>
+        <span>Positive</span>
       </div>
     </div>
   );

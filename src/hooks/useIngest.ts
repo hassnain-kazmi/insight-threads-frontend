@@ -40,10 +40,13 @@ export const useIngestEvents = (filters?: {
       if (!filters?.enableAutoRefresh || !query.state.data) {
         return false;
       }
-      const hasRunning = query.state.data.events.some(
-        (e) => e.status === "running" || e.status === "pending"
+      const hasActive = query.state.data.events.some(
+        (e) =>
+          e.status === "pending" ||
+          e.status === "processing" ||
+          e.status === "running"
       );
-      return hasRunning ? 5000 : false;
+      return hasActive ? 5000 : false;
     },
   });
 };

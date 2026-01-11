@@ -111,7 +111,7 @@ export const StatsCards = () => {
           onClick: () => navigate("/insights"),
           delay: 150,
         },
-      ].map((card, index) => (
+      ].map((card) => (
         <div
           key={card.label}
           className="animate-in fade-in-0 slide-in-from-bottom-4 h-full"

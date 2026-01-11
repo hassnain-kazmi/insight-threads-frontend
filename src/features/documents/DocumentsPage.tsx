@@ -2,7 +2,7 @@ import { useState } from "react";
 import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
 import { InfoNote } from "@/components/ui/info-note";
-import { DocumentFiltersHorizontal } from "@/components/documents/DocumentFiltersHorizontal";
+import { DocumentFilters as DocumentFiltersComponent } from "@/components/documents/DocumentFilters";
 import { DocumentsTable } from "@/components/documents/DocumentsTable";
 import { DocumentDetailDrawer } from "@/components/documents/DocumentDetailDrawer";
 import { SourceDistribution } from "@/components/documents/SourceDistribution";
@@ -19,7 +19,7 @@ export const DocumentsPage = () => {
     null
   );
 
-  const { data: documentsData } = useDocuments({ limit: 1000, offset: 0 });
+  const { data: documentsData } = useDocuments({ limit: 100000, offset: 0 });
 
   const hasActiveFilters = Object.keys(filters).some(
     (key) =>
@@ -37,6 +37,13 @@ export const DocumentsPage = () => {
           icon={FileText}
           iconColor="text-blue-600 dark:text-blue-400"
         />
+
+        <div className="animate-in fade-in-0 slide-in-from-top-2 duration-300">
+          <DocumentFiltersComponent
+            filters={filters}
+            onFiltersChange={setFilters}
+          />
+        </div>
 
         <InfoNote variant="tip">
           <p>
@@ -58,13 +65,6 @@ export const DocumentsPage = () => {
             </p>
           </InfoNote>
         )}
-
-        <div className="animate-in fade-in-0 slide-in-from-top-2 duration-300">
-          <DocumentFiltersHorizontal
-            filters={filters}
-            onFiltersChange={setFilters}
-          />
-        </div>
 
         {documentsData && documentsData.documents.length > 0 && (
           <div
