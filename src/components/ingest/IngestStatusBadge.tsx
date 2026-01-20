@@ -10,22 +10,9 @@ interface IngestStatusBadgeProps {
     | "failed"
     | null
     | undefined;
-  startedAt?: string;
 }
 
-export const IngestStatusBadge = ({
-  status,
-  startedAt,
-}: IngestStatusBadgeProps) => {
-  let normalizedStatus = status;
-  if (status === "pending" && startedAt) {
-    const secondsSinceStart =
-      (Date.now() - new Date(startedAt).getTime()) / 1000;
-    if (secondsSinceStart < 30) {
-      normalizedStatus = "processing";
-    }
-  }
-
+export const IngestStatusBadge = ({ status }: IngestStatusBadgeProps) => {
   const statusConfig = {
     pending: {
       icon: Clock,
@@ -60,8 +47,8 @@ export const IngestStatusBadge = ({
   } as const;
 
   const validStatus =
-    normalizedStatus && normalizedStatus in statusConfig
-      ? (normalizedStatus as keyof typeof statusConfig)
+    status && status in statusConfig
+      ? (status as keyof typeof statusConfig)
       : "pending";
 
   const config = statusConfig[validStatus];

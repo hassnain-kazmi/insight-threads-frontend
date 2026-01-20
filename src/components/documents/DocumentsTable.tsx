@@ -15,7 +15,11 @@ import { useDocuments } from "@/hooks/useDocuments";
 import { useIngestEvents } from "@/hooks/useIngest";
 import type { DocumentFilters, DocumentResponse } from "@/types/api";
 import { formatDistanceToNow } from "date-fns";
-import { getSourceTypeFromPath, calculatePagination } from "@/lib/utils";
+import {
+  getSourceTypeFromPath,
+  calculatePagination,
+  getSourceDisplayName,
+} from "@/lib/utils";
 
 interface DocumentsTableProps {
   filters: DocumentFilters;
@@ -41,7 +45,9 @@ export const DocumentsTable = ({
   onFiltersChange,
   onDocumentClick,
 }: DocumentsTableProps) => {
-  const { data, isLoading, error } = useDocuments(filters);
+  const { data, isLoading, error } = useDocuments(filters, {
+    enableAutoRefresh: true,
+  });
   const { data: ingestEventsData } = useIngestEvents({ limit: 500 });
 
   const ingestEventSourceMap = useMemo(() => {
@@ -185,8 +191,16 @@ export const DocumentsTable = ({
                   )}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="default" className="capitalize">
-                    {getDocumentSourceType(document)}
+                  <Badge variant="default">
+                    {(() => {
+                      const sourceType = getDocumentSourceType(document);
+                      if (sourceType === "unknown") {
+                        return "Unknown";
+                      }
+                      return getSourceDisplayName(
+                        sourceType as "rss" | "hackernews" | "github" | null
+                      );
+                    })()}
                   </Badge>
                 </TableCell>
                 <TableCell>

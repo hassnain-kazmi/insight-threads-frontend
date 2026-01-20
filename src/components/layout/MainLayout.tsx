@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { IngestionNotificationListener } from "@/components/ingest/IngestionNotificationListener";
 import { cn } from "@/lib/utils";
 
 export const MainLayout = () => {
@@ -19,9 +20,10 @@ export const MainLayout = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <IngestionNotificationListener />
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden cursor-pointer"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -35,7 +37,7 @@ export const MainLayout = () => {
       <main
         className={cn(
           "pt-16 min-h-screen transition-all duration-300 ease-in-out",
-          sidebarCollapsed ? "lg:pl-16" : "lg:pl-64",
+          sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
         )}
       >
         <ScrollToTop />

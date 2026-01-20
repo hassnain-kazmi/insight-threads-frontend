@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useDocument } from "@/hooks/useDocuments";
 import { formatDistanceToNow } from "date-fns";
@@ -24,16 +25,27 @@ const SentimentScore = ({ score }: { score: number | null }) => {
 
   return (
     <div className="flex items-center gap-2">
-      <span className={`font-medium ${
-        variant === "positive"
-          ? "text-emerald-600 dark:text-emerald-400"
-          : variant === "negative"
-          ? "text-red-600 dark:text-red-400"
-          : "text-slate-600 dark:text-slate-400"
-      }`}>
+      <span
+        className={`font-medium ${
+          variant === "positive"
+            ? "text-emerald-600 dark:text-emerald-400"
+            : variant === "negative"
+            ? "text-red-600 dark:text-red-400"
+            : "text-slate-600 dark:text-slate-400"
+        }`}
+      >
         {score.toFixed(3)}
       </span>
-      <Badge variant={variant === "positive" ? "default" : variant === "negative" ? "destructive" : "secondary"} className="text-xs">
+      <Badge
+        variant={
+          variant === "positive"
+            ? "default"
+            : variant === "negative"
+            ? "destructive"
+            : "secondary"
+        }
+        className="text-xs"
+      >
         {label}
       </Badge>
       <span className="text-xs text-muted-foreground">({description})</span>
@@ -45,11 +57,17 @@ export const DocumentDetailDrawer = ({
   documentId,
   onClose,
 }: DocumentDetailDrawerProps) => {
-  const { data: document, isLoading } = useDocument(documentId || "");
+  const lastDocumentIdRef = useRef<string | null>(null);
+  if (documentId) {
+    lastDocumentIdRef.current = documentId;
+  }
+  const effectiveDocumentId = lastDocumentIdRef.current;
+
+  const { data: document, isLoading } = useDocument(effectiveDocumentId || "");
 
   return (
     <Dialog open={!!documentId} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto duration-300 ease-out">
         {isLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-6 w-3/4" />
@@ -156,7 +174,20 @@ export const DocumentDetailDrawer = ({
                         <p className="text-xs text-muted-foreground mb-1">
                           DistilBERT Label
                         </p>
-                        <Badge variant="outline" className="capitalize">
+                        <Badge
+                          variant={
+                            document.sentiment.distilbert_label
+                              .toUpperCase()
+                              .includes("POSITIVE")
+                              ? "default"
+                              : document.sentiment.distilbert_label
+                                  .toUpperCase()
+                                  .includes("NEGATIVE")
+                              ? "destructive"
+                              : "secondary"
+                          }
+                          className="text-xs capitalize"
+                        >
                           {document.sentiment.distilbert_label}
                         </Badge>
                       </div>

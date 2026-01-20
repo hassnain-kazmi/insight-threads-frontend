@@ -30,7 +30,11 @@ export const AnomalyTimeline = ({
           data[key].count++;
           data[key].maxScore = Math.max(data[key].maxScore, anomaly.score);
         }
-      } catch {}
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("Invalid")) {
+          return;
+        }
+      }
     });
 
     const result = [];

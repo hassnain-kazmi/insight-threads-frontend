@@ -47,7 +47,7 @@ import {
   formatDuration,
   intervalToDuration,
 } from "date-fns";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, getSourceDisplayName } from "@/lib/utils";
 import { RSSIngestForm } from "./RSSIngestForm";
 import { HackerNewsIngestForm } from "./HackerNewsIngestForm";
 import { GitHubIngestForm } from "./GitHubIngestForm";
@@ -77,18 +77,15 @@ const IngestEventDetailModalContent = ({ eventId }: { eventId: string }) => {
                 Status
               </p>
               <div className="mt-1">
-                <IngestStatusBadge
-                  status={event.status}
-                  startedAt={event.started_at}
-                />
+                <IngestStatusBadge status={event.status} />
               </div>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">
                 Source
               </p>
-              <p className="mt-1 text-sm font-medium capitalize">
-                {event.source || "Unknown"}
+              <p className="mt-1 text-sm font-medium">
+                {getSourceDisplayName(event.source)}
               </p>
             </div>
             <div>
@@ -208,14 +205,11 @@ const IngestEventsTable = () => {
                 className="hover:bg-muted/50 transition-colors cursor-pointer"
                 onClick={() => setSelectedEventId(event.id)}
               >
-                <TableCell className="font-medium capitalize">
-                  {event.source || "Unknown"}
+                <TableCell className="font-medium">
+                  {getSourceDisplayName(event.source)}
                 </TableCell>
                 <TableCell>
-                  <IngestStatusBadge
-                    status={event.status}
-                    startedAt={event.started_at}
-                  />
+                  <IngestStatusBadge status={event.status} />
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDistanceToNow(new Date(event.started_at), {
@@ -296,7 +290,9 @@ export const IngestPage = () => {
         source_params: params,
       });
       setActiveSource("rss");
-    } catch {}
+    } catch (error) {
+      console.error("Failed to trigger ingestion:", error);
+    }
   };
 
   return (

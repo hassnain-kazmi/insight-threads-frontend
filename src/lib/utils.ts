@@ -238,3 +238,18 @@ export function calculatePagination(
     endItem,
   };
 }
+
+export function getSourceDisplayName(
+  source: "rss" | "hackernews" | "github" | null
+): string {
+  switch (source) {
+    case "rss":
+      return "RSS";
+    case "hackernews":
+      return "Hacker News";
+    case "github":
+      return "GitHub";
+    default:
+      return "Unknown";
+  }
+}

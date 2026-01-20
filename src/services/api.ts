@@ -63,7 +63,9 @@ class ApiClient {
         try {
           const errorData = await response.json();
           errorMessage = errorData.detail || errorData.message || errorMessage;
-        } catch {}
+        } catch {
+          // Response is not JSON, use default error message
+        }
 
         const error: ApiError = {
           message: errorMessage,

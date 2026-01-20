@@ -29,15 +29,15 @@ export const HackerNewsIngestForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await Promise.resolve(
-        onSubmit({
-          endpoint,
-          limit: limit > 0 ? limit : undefined,
-        })
-      );
+      await onSubmit({
+        endpoint,
+        limit: limit > 0 ? limit : undefined,
+      });
       setEndpoint("topstories");
       setLimit(50);
-    } catch {}
+    } catch (error) {
+      console.error("Failed to submit Hacker News ingestion:", error);
+    }
   };
 
   return (
