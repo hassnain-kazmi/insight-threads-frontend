@@ -7,12 +7,14 @@ import type {
 } from "@/types/api";
 
 export const queryKeys = {
-  documents: (filters: DocumentFilters) =>
-    ["documents", filters] as const,
+  documents: (filters: DocumentFilters) => ["documents", filters] as const,
   document: (id: string) => ["documents", id] as const,
 };
 
-export const useDocuments = (filters: DocumentFilters = {}) => {
+export const useDocuments = (
+  filters: DocumentFilters = {},
+  options?: { enableAutoRefresh?: boolean }
+) => {
   return useQuery<DocumentsListResponse>({
     queryKey: queryKeys.documents(filters),
     queryFn: async () => {
@@ -26,7 +28,8 @@ export const useDocuments = (filters: DocumentFilters = {}) => {
       if (filters.ingest_event_id)
         params.append("ingest_event_id", filters.ingest_event_id);
       if (filters.cluster_id) params.append("cluster_id", filters.cluster_id);
-      if (filters.source_type) params.append("source_type", filters.source_type);
+      if (filters.source_type)
+        params.append("source_type", filters.source_type);
       if (filters.sentiment_min !== undefined)
         params.append("sentiment_min", filters.sentiment_min.toString());
       if (filters.sentiment_max !== undefined)
@@ -36,6 +39,16 @@ export const useDocuments = (filters: DocumentFilters = {}) => {
       return apiClient.get<DocumentsListResponse>(
         `/documents${queryString ? `?${queryString}` : ""}`
       );
+    },
+    staleTime: 0,
+    refetchInterval: (query) => {
+      if (!options?.enableAutoRefresh || !query.state.data) {
+        return false;
+      }
+      const hasUnprocessed = query.state.data.documents.some(
+        (doc) => !doc.processed
+      );
+      return hasUnprocessed ? 10000 : false;
     },
   });
 };
@@ -49,4 +62,3 @@ export const useDocument = (id: string) => {
     enabled: !!id,
   });
 };
-

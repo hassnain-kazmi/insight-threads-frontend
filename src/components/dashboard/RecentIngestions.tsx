@@ -4,10 +4,14 @@ import { useIngestEvents } from "@/hooks/useIngest";
 import { IngestStatusBadge } from "@/components/ingest/IngestStatusBadge";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { getSourceDisplayName } from "@/lib/utils";
 
 export const RecentIngestions = () => {
   const navigate = useNavigate();
-  const { data, isLoading, error } = useIngestEvents({ limit: 5 });
+  const { data, isLoading, error } = useIngestEvents({
+    limit: 5,
+    enableAutoRefresh: true,
+  });
 
   if (isLoading) {
     return (
@@ -48,25 +52,12 @@ export const RecentIngestions = () => {
         <CardTitle>Recent Ingestions</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-0">
           {data.events.map((event) => {
-            const getSourceDisplayName = (source: string | null): string => {
-              switch (source) {
-                case "rss":
-                  return "RSS";
-                case "hackernews":
-                  return "Hacker News";
-                case "github":
-                  return "GitHub";
-                default:
-                  return "Unknown";
-              }
-            };
-
             return (
               <div
                 key={event.id}
-                className="flex items-start justify-between gap-3 pb-4 border-b border-border last:border-0 last:pb-0 hover:bg-muted/30 rounded-lg p-2 -m-2 transition-colors cursor-pointer group"
+                className="flex items-start justify-between gap-3 py-3 border-b border-border last:border-0 hover:bg-muted/30 rounded-lg px-2 -mx-2 transition-colors cursor-pointer group"
                 onClick={() => navigate("/ingest")}
               >
                 <div className="flex-1 min-w-0 space-y-1">
@@ -74,7 +65,7 @@ export const RecentIngestions = () => {
                     <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                       {getSourceDisplayName(event.source)}
                     </span>
-                    <IngestStatusBadge status={event.status} startedAt={event.started_at} />
+                    <IngestStatusBadge status={event.status} />
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(event.started_at), {

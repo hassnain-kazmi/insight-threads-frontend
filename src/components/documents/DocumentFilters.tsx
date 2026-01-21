@@ -12,7 +12,7 @@ import { X, Filter } from "lucide-react";
 import type { DocumentFilters as DocumentFiltersType } from "@/types/api";
 import { useClusters } from "@/hooks/useClusters";
 import { useIngestEvents } from "@/hooks/useIngest";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getSourceDisplayName } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 interface DocumentFiltersProps {
@@ -136,9 +136,13 @@ export const DocumentFilters = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Sources</SelectItem>
-              <SelectItem value="rss">RSS</SelectItem>
-              <SelectItem value="hackernews">Hacker News</SelectItem>
-              <SelectItem value="github">GitHub</SelectItem>
+              <SelectItem value="rss">{getSourceDisplayName("rss")}</SelectItem>
+              <SelectItem value="hackernews">
+                {getSourceDisplayName("hackernews")}
+              </SelectItem>
+              <SelectItem value="github">
+                {getSourceDisplayName("github")}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -190,7 +194,8 @@ export const DocumentFilters = ({
               <SelectItem value="all">All Events</SelectItem>
               {ingestEventsData?.events.map((event) => (
                 <SelectItem key={event.id} value={event.id}>
-                  {event.source || "Unknown"} - {formatDate(event.started_at)}
+                  {getSourceDisplayName(event.source)} -{" "}
+                  {formatDate(event.started_at)}
                 </SelectItem>
               ))}
             </SelectContent>

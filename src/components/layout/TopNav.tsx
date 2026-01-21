@@ -16,7 +16,9 @@ export const TopNav = ({
   const handleSignOut = async () => {
     try {
       await signOut();
-    } catch (error) {}
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+    }
   };
 
   return (

@@ -205,3 +205,9 @@ export interface ClusterUMAPResponse {
   documents: DocumentUMAPResponse[];
   total: number;
 }
+
+export interface UserResponse {
+  user_id: string;
+  email: string;
+  name: string | null;
+}

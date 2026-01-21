@@ -44,7 +44,6 @@ export const SentimentGauge = ({
     >
       <svg width={svgWidth} height={svgHeight} className="overflow-visible">
         <defs>
-          {/* Gradient for the arc - red to gray to green */}
           <linearGradient
             id="sentimentGradient"
             x1="0%"
@@ -57,7 +56,6 @@ export const SentimentGauge = ({
             <stop offset="100%" stopColor="#10b981" />
           </linearGradient>
         </defs>
-        {/* Background arc with gradient (full semi-circle) */}
         <path
           d={`M ${startX} ${startY} A ${radius} ${radius} 0 0 1 ${endX} ${endY}`}
           fill="none"
@@ -66,7 +64,6 @@ export const SentimentGauge = ({
           strokeLinecap="round"
           opacity={0.3}
         />
-        {/* Needle */}
         <line
           x1={centerX}
           y1={centerY}
@@ -77,17 +74,14 @@ export const SentimentGauge = ({
           strokeLinecap="round"
           className="transition-all duration-500"
         />
-        {/* Needle tip */}
         <circle cx={needleX} cy={needleY} r="4" fill={color} />
       </svg>
-      {/* Value display */}
       <div className="mt-1 text-center">
         <div className="text-xl font-semibold" style={{ color }}>
           {normalizedValue > 0 ? "+" : ""}
           {normalizedValue.toFixed(2)}
         </div>
       </div>
-      {/* Labels */}
       <div className="w-full flex justify-between text-xs text-muted-foreground mt-1 px-1">
         <span>Negative</span>
         <span>Neutral</span>

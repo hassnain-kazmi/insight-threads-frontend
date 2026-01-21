@@ -66,19 +66,17 @@ export const GitHubIngestForm = ({
     }
 
     try {
-      await Promise.resolve(
-        onSubmit({
-          repos: validRepos,
-          include_commits: includeCommits,
-          include_issues: includeIssues,
-          include_prs: includePRs,
-          include_releases: includeReleases,
-          limit_per_type: limitPerType > 0 ? limitPerType : undefined,
-          commit_since: commitSince.trim() || undefined,
-          issue_state: issueState,
-          pr_state: prState,
-        })
-      );
+      await onSubmit({
+        repos: validRepos,
+        include_commits: includeCommits,
+        include_issues: includeIssues,
+        include_prs: includePRs,
+        include_releases: includeReleases,
+        limit_per_type: limitPerType > 0 ? limitPerType : undefined,
+        commit_since: commitSince.trim() || undefined,
+        issue_state: issueState,
+        pr_state: prState,
+      });
       setRepos([{ owner: "", repo: "" }]);
       setIncludeCommits(true);
       setIncludeIssues(true);
@@ -88,7 +86,9 @@ export const GitHubIngestForm = ({
       setCommitSince("");
       setIssueState("all");
       setPrState("all");
-    } catch {}
+    } catch (error) {
+      console.error("Failed to submit GitHub ingestion:", error);
+    }
   };
 
   const isValid =

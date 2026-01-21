@@ -37,15 +37,15 @@ export const RSSIngestForm = ({ onSubmit, isLoading }: RSSIngestFormProps) => {
       return;
     }
     try {
-      await Promise.resolve(
-        onSubmit({
-          feed_urls: validUrls,
-          limit: limit > 0 ? limit : undefined,
-        })
-      );
+      await onSubmit({
+        feed_urls: validUrls,
+        limit: limit > 0 ? limit : undefined,
+      });
       setFeedUrls([""]);
       setLimit(50);
-    } catch {}
+    } catch (error) {
+      console.error("Failed to submit RSS ingestion:", error);
+    }
   };
 
   const isValid = feedUrls.some((url) => url.trim() !== "");

@@ -36,6 +36,7 @@ export const useIngestEvents = (filters?: {
         `/ingest/events${queryString ? `?${queryString}` : ""}`
       );
     },
+    staleTime: 0,
     refetchInterval: (query) => {
       if (!filters?.enableAutoRefresh || !query.state.data) {
         return false;
@@ -68,8 +69,18 @@ export const useTriggerIngestion = () => {
     mutationFn: async (data) => {
       return apiClient.post<TriggerIngestionResponse>("/ingest/trigger", data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.ingestEvents() });
+    onSuccess: async (response) => {
+      await queryClient.invalidateQueries({
+        queryKey: ["ingest-events"],
+        exact: false,
+      });
+
+      setTimeout(async () => {
+        await queryClient.refetchQueries({
+          queryKey: ["ingest-events"],
+          exact: false,
+        });
+      }, 300);
     },
   });
 };
