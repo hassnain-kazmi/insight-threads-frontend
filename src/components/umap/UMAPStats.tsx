@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Layers, FileText, Target, TrendingUp } from "lucide-react";
 import type { DocumentUMAPResponse } from "@/types/api";
@@ -7,7 +7,7 @@ interface UMAPStatsProps {
   data: DocumentUMAPResponse[];
 }
 
-export const UMAPStats = ({ data }: UMAPStatsProps) => {
+export const UMAPStats = memo(function UMAPStats({ data }: UMAPStatsProps) {
   const stats = useMemo(() => {
     const total = data.length;
     const clustered = data.filter((d) => d.cluster_id !== null).length;
@@ -18,7 +18,7 @@ export const UMAPStats = ({ data }: UMAPStatsProps) => {
       if (d.cluster_id) {
         clusterCounts.set(
           d.cluster_id,
-          (clusterCounts.get(d.cluster_id) || 0) + 1
+          (clusterCounts.get(d.cluster_id) || 0) + 1,
         );
       }
     });
@@ -142,4 +142,4 @@ export const UMAPStats = ({ data }: UMAPStatsProps) => {
       </Card>
     </div>
   );
-};
+});

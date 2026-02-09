@@ -11,7 +11,11 @@ import {
 import { useSearch } from "@/hooks/useSearch";
 import type { DocumentSearchResult } from "@/types/api";
 import { formatDistanceToNow } from "date-fns";
-import { getRelevancePercentage, getRelevanceDescription } from "@/lib/utils";
+import {
+  getRelevancePercentage,
+  getRelevanceDescription,
+  getErrorMessage,
+} from "@/lib/utils";
 
 interface SearchResultsProps {
   query: string;
@@ -76,13 +80,32 @@ const SearchResultItem = ({
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p><strong>{description}</strong></p>
+                      <p>
+                        <strong>{description}</strong>
+                      </p>
                       <p className="text-xs mt-1">
-                        Similarity score: {result.similarity_score.toFixed(3)} (lower = more similar)
+                        Similarity score: {result.similarity_score.toFixed(3)}{" "}
+                        (lower = more similar)
                       </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+                <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${relevance}%`,
+                      background:
+                        relevance >= 80
+                          ? "#10b981"
+                          : relevance >= 60
+                            ? "#3b82f6"
+                            : relevance >= 40
+                              ? "#f59e0b"
+                              : "#6b7280",
+                    }}
+                  />
+                </div>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Clock className="w-3 h-3" />
                   <span>
@@ -134,7 +157,7 @@ export const SearchResults = ({
             Error loading search results
           </p>
           <p className="text-xs text-muted-foreground">
-            {error instanceof Error ? error.message : "Unknown error occurred"}
+            {getErrorMessage(error)}
           </p>
         </CardContent>
       </Card>
@@ -149,10 +172,11 @@ export const SearchResults = ({
             <Search className="w-8 h-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-medium text-foreground mb-2">
-            No results found
+            No results for "{query}"
           </h3>
           <p className="text-muted-foreground max-w-md mx-auto text-sm">
-            Try adjusting your search query or similarity threshold.
+            Try broadening your search query or loosening the similarity
+            threshold.
           </p>
         </CardContent>
       </Card>
@@ -161,9 +185,21 @@ export const SearchResults = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 text-xs sm:text-sm text-muted-foreground">
         <span>
-          Found {data.total} result{data.total !== 1 ? "s" : ""} for "{query}"
+          Found{" "}
+          <span className="font-medium text-foreground">
+            {data.total} result{data.total !== 1 ? "s" : ""}
+          </span>{" "}
+          for <span className="font-medium text-foreground">"{query}"</span>
+        </span>
+        <span className="sm:text-right">
+          Threshold:{" "}
+          <span className="font-medium text-foreground">
+            {similarityThreshold === undefined
+              ? "Auto (no filter)"
+              : similarityThreshold}
+          </span>
         </span>
       </div>
       <div className="space-y-3">

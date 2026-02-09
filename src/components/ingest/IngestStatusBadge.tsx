@@ -2,14 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
 interface IngestStatusBadgeProps {
-  status:
-    | "pending"
-    | "processing"
-    | "running"
-    | "completed"
-    | "failed"
-    | null
-    | undefined;
+  status: "pending" | "running" | "completed" | "failed" | null | undefined;
 }
 
 export const IngestStatusBadge = ({ status }: IngestStatusBadgeProps) => {
@@ -19,12 +12,6 @@ export const IngestStatusBadge = ({ status }: IngestStatusBadgeProps) => {
       label: "Pending",
       variant: "outline" as const,
       className: "text-slate-600",
-    },
-    processing: {
-      icon: Loader2,
-      label: "Processing",
-      variant: "secondary" as const,
-      className: "text-blue-600 animate-spin",
     },
     running: {
       icon: Loader2,
@@ -46,10 +33,8 @@ export const IngestStatusBadge = ({ status }: IngestStatusBadgeProps) => {
     },
   } as const;
 
-  const validStatus =
-    status && status in statusConfig
-      ? (status as keyof typeof statusConfig)
-      : "pending";
+  const validStatus: keyof typeof statusConfig =
+    status && status in statusConfig ? status : "pending";
 
   const config = statusConfig[validStatus];
   const Icon = config.icon;

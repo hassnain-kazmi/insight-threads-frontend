@@ -12,14 +12,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { useDocuments } from "@/hooks/useDocuments";
-import { useIngestEvents } from "@/hooks/useIngest";
-import type { DocumentFilters, DocumentResponse } from "@/types/api";
-import { formatDistanceToNow } from "date-fns";
+import { useIngestEventSourceMap } from "@/hooks/useIngest";
+import type { DocumentFilters } from "@/types/api";
+import { formatDistanceToNow, differenceInDays } from "date-fns";
 import {
-  getSourceTypeFromPath,
+  getDocumentSourceType,
   calculatePagination,
   getSourceDisplayName,
+  getErrorMessage,
 } from "@/lib/utils";
+import { DEFAULT_PAGE_SIZE } from "@/constants";
 
 interface DocumentsTableProps {
   filters: DocumentFilters;
@@ -48,33 +50,24 @@ export const DocumentsTable = ({
   const { data, isLoading, error } = useDocuments(filters, {
     enableAutoRefresh: true,
   });
-  const { data: ingestEventsData } = useIngestEvents({ limit: 500 });
+  const { sourceMap } = useIngestEventSourceMap({ limit: 500 });
 
-  const ingestEventSourceMap = useMemo(() => {
-    const map = new Map<string, string | null>();
-    ingestEventsData?.events.forEach((event) => {
-      if (event.id) {
-        map.set(event.id, event.source);
-      }
-    });
-    return map;
-  }, [ingestEventsData]);
-
-  const getDocumentSourceType = (document: DocumentResponse): string => {
-    if (document.ingest_event_id) {
-      const source = ingestEventSourceMap.get(document.ingest_event_id);
-      if (source) {
-        return source;
-      }
-    }
-
-    return getSourceTypeFromPath(document.source_path);
-  };
+  const processedSummary = useMemo(() => {
+    if (!data) return { processed: 0, pending: 0 };
+    return data.documents.reduce(
+      (acc, doc) => {
+        if (doc.processed) acc.processed += 1;
+        else acc.pending += 1;
+        return acc;
+      },
+      { processed: 0, pending: 0 },
+    );
+  }, [data]);
 
   const { pageSize, currentPage, totalPages, startItem, endItem } = data
     ? calculatePagination(filters.offset, filters.limit, data.total)
     : {
-        pageSize: filters.limit || 50,
+        pageSize: filters.limit ?? DEFAULT_PAGE_SIZE,
         currentPage: 1,
         totalPages: 0,
         startItem: 0,
@@ -139,7 +132,7 @@ export const DocumentsTable = ({
         </h3>
         <p className="text-muted-foreground max-w-md mx-auto">
           {error
-            ? "Failed to load documents. Please try again."
+            ? `Failed to load documents: ${getErrorMessage(error)}`
             : "No documents match your current filters. Try adjusting your search criteria."}
         </p>
       </div>
@@ -148,6 +141,45 @@ export const DocumentsTable = ({
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>
+          In this view:{" "}
+          <span className="font-medium text-foreground">
+            {processedSummary.processed}
+          </span>{" "}
+          processed ·{" "}
+          <span className="font-medium text-foreground">
+            {processedSummary.pending}
+          </span>{" "}
+          pending
+        </span>
+        <div className="flex items-center gap-2 w-40 h-1.5 rounded-full bg-muted overflow-hidden">
+          {processedSummary.processed + processedSummary.pending > 0 && (
+            <>
+              <div
+                className="h-full bg-emerald-500/70"
+                style={{
+                  width: `${
+                    (processedSummary.processed /
+                      (processedSummary.processed + processedSummary.pending)) *
+                    100
+                  }%`,
+                }}
+              />
+              <div
+                className="h-full bg-amber-400/70"
+                style={{
+                  width: `${
+                    (processedSummary.pending /
+                      (processedSummary.processed + processedSummary.pending)) *
+                    100
+                  }%`,
+                }}
+              />
+            </>
+          )}
+        </div>
+      </div>
       <div className="border border-border rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
@@ -168,10 +200,44 @@ export const DocumentsTable = ({
               >
                 <TableCell className="font-medium max-w-md">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">
-                      {getSourceIcon(getDocumentSourceType(document))}
+                    <span className="relative text-lg">
+                      <span className="absolute -left-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full">
+                        {(() => {
+                          const sourceType = getDocumentSourceType(
+                            document,
+                            sourceMap,
+                          );
+                          if (sourceType === "github")
+                            return (
+                              <span className="block h-full w-full bg-sky-500" />
+                            );
+                          if (sourceType === "hackernews")
+                            return (
+                              <span className="block h-full w-full bg-amber-500" />
+                            );
+                          if (sourceType === "rss")
+                            return (
+                              <span className="block h-full w-full bg-emerald-500" />
+                            );
+                          return (
+                            <span className="block h-full w-full bg-slate-400" />
+                          );
+                        })()}
+                      </span>
+                      {getSourceIcon(
+                        getDocumentSourceType(document, sourceMap),
+                      )}
                     </span>
-                    <span className="truncate">
+                    <span
+                      className={`truncate ${
+                        differenceInDays(
+                          new Date(),
+                          new Date(document.created_at),
+                        ) > 7
+                          ? "text-muted-foreground"
+                          : ""
+                      }`}
+                    >
                       {document.title || "Untitled Document"}
                     </span>
                   </div>
@@ -193,13 +259,14 @@ export const DocumentsTable = ({
                 <TableCell>
                   <Badge variant="default">
                     {(() => {
-                      const sourceType = getDocumentSourceType(document);
+                      const sourceType = getDocumentSourceType(
+                        document,
+                        sourceMap,
+                      );
                       if (sourceType === "unknown") {
                         return "Unknown";
                       }
-                      return getSourceDisplayName(
-                        sourceType as "rss" | "hackernews" | "github" | null
-                      );
+                      return getSourceDisplayName(sourceType);
                     })()}
                   </Badge>
                 </TableCell>
@@ -238,7 +305,8 @@ export const DocumentsTable = ({
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Showing {startItem} to {endItem} of {data.total} documents
+            Page {currentPage} of {totalPages} · Showing {startItem}–{endItem}{" "}
+            of {data.total} documents
           </div>
           <div className="flex items-center gap-2">
             <Button

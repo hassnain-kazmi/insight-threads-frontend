@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useCallback, memo } from "react";
 import {
   ScatterChart,
   Scatter,
@@ -51,14 +51,12 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
   return null;
 };
 
-export const UMAPScatterPlot = ({
+const UMAPScatterPlotInner = ({
   data,
   onDocumentClick,
   showGrid = true,
   highlightedClusterId = null,
 }: UMAPScatterPlotProps) => {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
   const chartData = useMemo(() => {
     return data.map((doc, index) => ({
       ...doc,
@@ -92,13 +90,38 @@ export const UMAPScatterPlot = ({
   }, [data]);
 
   const handleClick = useCallback(
-    (data: DocumentUMAPResponse & { index?: number }) => {
-      if (onDocumentClick && data?.document_id) {
-        onDocumentClick(data.document_id);
+    (pointData: DocumentUMAPResponse & { index?: number }) => {
+      if (onDocumentClick && pointData?.document_id) {
+        onDocumentClick(pointData.document_id);
       }
     },
-    [onDocumentClick]
+    [onDocumentClick],
   );
+
+  const cells = useMemo(() => {
+    return chartData.map((entry) => {
+      const color = getClusterColor(entry.cluster_id);
+      const isHighlighted = highlightedClusterId
+        ? entry.cluster_id === highlightedClusterId
+        : true;
+      const isDimmed = highlightedClusterId
+        ? entry.cluster_id !== highlightedClusterId
+        : false;
+
+      return (
+        <Cell
+          key={entry.document_id}
+          fill={color}
+          opacity={isDimmed ? 0.2 : isHighlighted ? 0.8 : 0.7}
+          style={{
+            cursor: onDocumentClick ? "pointer" : "default",
+            stroke: isHighlighted && !isDimmed ? color : "none",
+            strokeWidth: isHighlighted && !isDimmed ? 1.5 : 0,
+          }}
+        />
+      );
+    });
+  }, [chartData, highlightedClusterId, onDocumentClick]);
 
   if (data.length === 0) {
     return (
@@ -151,38 +174,14 @@ export const UMAPScatterPlot = ({
             data={chartData}
             fill="hsl(var(--primary))"
             onClick={handleClick}
-            onMouseEnter={(_, index) => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
+            isAnimationActive={false}
           >
-            {chartData.map((entry, index) => {
-              const color = getClusterColor(entry.cluster_id);
-              const isHovered = hoveredIndex === index;
-              const isHighlighted = highlightedClusterId
-                ? entry.cluster_id === highlightedClusterId
-                : true;
-              const isDimmed = highlightedClusterId
-                ? entry.cluster_id !== highlightedClusterId
-                : false;
-
-              return (
-                <Cell
-                  key={entry.document_id}
-                  fill={color}
-                  opacity={
-                    isHovered ? 1 : isDimmed ? 0.2 : isHighlighted ? 0.8 : 0.7
-                  }
-                  style={{
-                    cursor: onDocumentClick ? "pointer" : "default",
-                    transition: "opacity 0.2s ease",
-                    stroke: isHighlighted && !isDimmed ? color : "none",
-                    strokeWidth: isHighlighted && !isDimmed ? 1.5 : 0,
-                  }}
-                />
-              );
-            })}
+            {cells}
           </Scatter>
         </ScatterChart>
       </ResponsiveContainer>
     </div>
   );
 };
+
+export const UMAPScatterPlot = memo(UMAPScatterPlotInner);

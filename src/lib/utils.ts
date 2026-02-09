@@ -1,17 +1,30 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { format, formatDistanceToNow } from "date-fns";
-import type { KeywordResponse } from "@/types/api";
+import type { DocumentResponse, KeywordResponse } from "@/types/api";
+import { DEFAULT_PAGE_SIZE } from "@/constants";
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
-export function getSentimentInfo(sentiment: number | null): {
+export const buildQueryString = (
+  params: Record<string, string | number | boolean | undefined | null>,
+): string => {
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null) continue;
+    searchParams.append(key, String(value));
+  }
+  const s = searchParams.toString();
+  return s ? `?${s}` : "";
+};
+
+export const getSentimentInfo = (
+  sentiment: number | null,
+): {
   variant: "positive" | "negative" | "neutral";
   label: string;
   description: string;
-} {
+} => {
   if (sentiment === null) {
     return {
       variant: "neutral",
@@ -52,19 +65,16 @@ export function getSentimentInfo(sentiment: number | null): {
     label: "Neutral",
     description: "Neutral or balanced sentiment",
   };
-}
+};
 
-/**
- * Get cluster display name from keywords or fallback to ID
- */
-export function getClusterDisplayName(
+export const getClusterDisplayName = (
   clusterId: string,
   keywords?: KeywordResponse[],
-  maxKeywords: number = 3
-): string {
+  maxKeywords = 3,
+): string => {
   if (keywords && keywords.length > 0) {
     const sorted = [...keywords].sort(
-      (a, b) => (b.weight ?? 0) - (a.weight ?? 0)
+      (a, b) => (b.weight ?? 0) - (a.weight ?? 0),
     );
     const topKeywords = sorted
       .slice(0, maxKeywords)
@@ -73,15 +83,14 @@ export function getClusterDisplayName(
     return topKeywords || `Cluster ${clusterId.slice(0, 8)}`;
   }
   return `Cluster ${clusterId.slice(0, 8)}`;
-}
+};
 
-/**
- * Get human-readable momentum interpretation
- */
-export function getMomentumLabel(momentum: number | null): {
+export const getMomentumLabel = (
+  momentum: number | null,
+): {
   label: string;
   description: string;
-} {
+} => {
   if (momentum === null) {
     return {
       label: "N/A",
@@ -116,12 +125,8 @@ export function getMomentumLabel(momentum: number | null): {
     label: "Stable",
     description: "No significant change in trend",
   };
-}
+};
 
-/**
- * Format a date string to a readable date and time format
- * Example: "Jan 15, 2024, 10:30 AM"
- */
 export const formatDateTime = (dateString: string): string => {
   try {
     return format(new Date(dateString), "MMM dd, yyyy, h:mm a");
@@ -130,10 +135,6 @@ export const formatDateTime = (dateString: string): string => {
   }
 };
 
-/**
- * Format a date string to a short date format
- * Example: "Jan 15, 2024"
- */
 export const formatDate = (dateString: string): string => {
   try {
     return format(new Date(dateString), "MMM dd, yyyy");
@@ -142,10 +143,6 @@ export const formatDate = (dateString: string): string => {
   }
 };
 
-/**
- * Format a date string as relative time
- * Example: "2 hours ago", "3 days ago"
- */
 export const formatRelativeTime = (dateString: string): string => {
   try {
     return formatDistanceToNow(new Date(dateString), { addSuffix: true });
@@ -154,32 +151,37 @@ export const formatRelativeTime = (dateString: string): string => {
   }
 };
 
-/**
- * Get relevance percentage from similarity score (0-2 range, lower = more similar)
- */
-export function getRelevancePercentage(similarityScore: number): number {
+export const getRelevancePercentage = (similarityScore: number): number => {
   const clamped = Math.max(0, Math.min(2, similarityScore));
   return Math.round(((2 - clamped) / 2) * 100);
-}
+};
 
-/**
- * Get relevance description
- */
-export function getRelevanceDescription(percentage: number): string {
+export const getRelevanceDescription = (percentage: number): string => {
   if (percentage >= 90) return "Very high relevance";
   if (percentage >= 75) return "High relevance";
   if (percentage >= 60) return "Moderate relevance";
   if (percentage >= 40) return "Low relevance";
   return "Very low relevance";
-}
+};
 
-/**
- * Get source type from source path
- * Returns "rss" | "hackernews" | "github" | "unknown"
- */
-export function getSourceTypeFromPath(
-  sourcePath: string | null
-): "rss" | "hackernews" | "github" | "unknown" {
+export type DocumentSourceType = "rss" | "hackernews" | "github" | "unknown";
+
+export const getDocumentSourceType = (
+  document: DocumentResponse,
+  sourceMap: Map<string, string | null>,
+): DocumentSourceType => {
+  if (document.ingest_event_id) {
+    const source = sourceMap.get(document.ingest_event_id);
+    if (source === "rss" || source === "hackernews" || source === "github") {
+      return source;
+    }
+  }
+  return getSourceTypeFromPath(document.source_path);
+};
+
+export const getSourceTypeFromPath = (
+  sourcePath: string | null,
+): DocumentSourceType => {
   if (!sourcePath) return "unknown";
 
   const lowerPath = sourcePath.toLowerCase();
@@ -207,28 +209,25 @@ export function getSourceTypeFromPath(
     lowerPath.endsWith(".rss") ||
     lowerPath.includes("rss.xml") ||
     lowerPath.includes("feed.xml") ||
-    lowerPath.includes("atom.xml") ||
-    lowerPath.includes("http")
+    lowerPath.includes("atom.xml")
   ) {
     return "rss";
   }
 
   return "unknown";
-}
+};
 
-/**
- * Calculate pagination values from filters
- */
-export function calculatePagination(
+export const calculatePagination = (
   offset: number | undefined,
   limit: number | undefined,
-  total: number
-) {
-  const pageSize = limit || 50;
-  const currentPage = Math.floor((offset || 0) / pageSize) + 1;
+  total: number,
+) => {
+  const pageSize = limit ?? DEFAULT_PAGE_SIZE;
+  const offsetVal = offset ?? 0;
+  const currentPage = Math.floor(offsetVal / pageSize) + 1;
   const totalPages = Math.ceil(total / pageSize);
-  const startItem = (offset || 0) + 1;
-  const endItem = Math.min((offset || 0) + pageSize, total);
+  const startItem = offsetVal + 1;
+  const endItem = Math.min(offsetVal + pageSize, total);
 
   return {
     pageSize,
@@ -237,11 +236,11 @@ export function calculatePagination(
     startItem,
     endItem,
   };
-}
+};
 
-export function getSourceDisplayName(
-  source: "rss" | "hackernews" | "github" | null
-): string {
+export const getSourceDisplayName = (
+  source: DocumentSourceType | null,
+): string => {
   switch (source) {
     case "rss":
       return "RSS";
@@ -252,4 +251,17 @@ export function getSourceDisplayName(
     default:
       return "Unknown";
   }
-}
+};
+
+export const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) return error.message;
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message: unknown }).message === "string"
+  ) {
+    return (error as { message: string }).message;
+  }
+  return String(error);
+};

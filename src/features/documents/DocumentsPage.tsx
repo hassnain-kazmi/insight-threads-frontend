@@ -9,23 +9,28 @@ import { SourceDistribution } from "@/components/documents/SourceDistribution";
 import { useDocuments } from "@/hooks/useDocuments";
 import { FileText } from "lucide-react";
 import type { DocumentFilters } from "@/types/api";
+import { DEFAULT_PAGE_SIZE, DOCUMENTS_DISTRIBUTION_LIMIT } from "@/constants";
+import { Button } from "@/components/ui/button";
 
 export const DocumentsPage = () => {
   const [filters, setFilters] = useState<DocumentFilters>({
-    limit: 50,
+    limit: DEFAULT_PAGE_SIZE,
     offset: 0,
   });
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
-    null
+    null,
   );
 
-  const { data: documentsData } = useDocuments({ limit: 100000, offset: 0 });
+  const { data: distributionData } = useDocuments({
+    limit: DOCUMENTS_DISTRIBUTION_LIMIT,
+    offset: 0,
+  });
 
   const hasActiveFilters = Object.keys(filters).some(
     (key) =>
       key !== "limit" &&
       key !== "offset" &&
-      filters[key as keyof DocumentFilters]
+      filters[key as keyof DocumentFilters],
   );
 
   return (
@@ -63,15 +68,29 @@ export const DocumentsPage = () => {
               type, sentiment range, cluster membership, processing status, or
               specific ingestion event.
             </p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="mt-2 h-7 px-2 text-xs"
+              onClick={() =>
+                setFilters({
+                  limit: DEFAULT_PAGE_SIZE,
+                  offset: 0,
+                })
+              }
+            >
+              Reset filters
+            </Button>
           </InfoNote>
         )}
 
-        {documentsData && documentsData.documents.length > 0 && (
+        {distributionData && distributionData.documents.length > 0 && (
           <div
             className="animate-in fade-in-0 slide-in-from-bottom-2"
             style={{ animationDelay: "50ms" }}
           >
-            <SourceDistribution documents={documentsData.documents} />
+            <SourceDistribution documents={distributionData.documents} />
           </div>
         )}
 

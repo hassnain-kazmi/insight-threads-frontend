@@ -40,7 +40,7 @@ export const DocumentFilters = ({
 
   const handleFilterChange = (
     key: keyof DocumentFiltersType,
-    value: unknown
+    value: unknown,
   ) => {
     onFiltersChange({
       ...filters,
@@ -60,7 +60,7 @@ export const DocumentFilters = ({
     <div
       className={cn(
         "bg-card border border-border rounded-xl p-4 space-y-4",
-        className
+        className,
       )}
     >
       <div className="flex items-center justify-between">
@@ -96,8 +96,8 @@ export const DocumentFilters = ({
               filters.processed === undefined
                 ? "all"
                 : filters.processed
-                ? "processed"
-                : "unprocessed"
+                  ? "processed"
+                  : "unprocessed"
             }
             onValueChange={(value) => {
               if (value === "all") {
@@ -127,7 +127,7 @@ export const DocumentFilters = ({
             onValueChange={(value) =>
               handleFilterChange(
                 "source_type",
-                value === "all" ? undefined : value
+                value === "all" ? undefined : value,
               )
             }
           >
@@ -156,7 +156,7 @@ export const DocumentFilters = ({
             onValueChange={(value) =>
               handleFilterChange(
                 "cluster_id",
-                value === "all" ? undefined : value
+                value === "all" ? undefined : value,
               )
             }
           >
@@ -183,7 +183,7 @@ export const DocumentFilters = ({
             onValueChange={(value) =>
               handleFilterChange(
                 "ingest_event_id",
-                value === "all" ? undefined : value
+                value === "all" ? undefined : value,
               )
             }
           >
@@ -217,7 +217,7 @@ export const DocumentFilters = ({
                 e.target.value === "" ? undefined : parseFloat(e.target.value);
               handleFilterChange(
                 "sentiment_min",
-                value !== undefined && !isNaN(value) ? value : undefined
+                value !== undefined && !isNaN(value) ? value : undefined,
               );
             }}
             placeholder="-1.0"
@@ -240,7 +240,7 @@ export const DocumentFilters = ({
                 e.target.value === "" ? undefined : parseFloat(e.target.value);
               handleFilterChange(
                 "sentiment_max",
-                value !== undefined && !isNaN(value) ? value : undefined
+                value !== undefined && !isNaN(value) ? value : undefined,
               );
             }}
             placeholder="1.0"

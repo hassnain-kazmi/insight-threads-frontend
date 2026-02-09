@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Layers, X } from "lucide-react";
@@ -14,12 +14,12 @@ interface ClusterLegendProps {
   onClear?: () => void;
 }
 
-export const ClusterLegend = ({
+export const ClusterLegend = memo(function ClusterLegend({
   data,
   selectedClusterId,
   onClusterSelect,
   onClear,
-}: ClusterLegendProps) => {
+}: ClusterLegendProps) {
   const navigate = useNavigate();
 
   const clusterInfo = useMemo(() => {
@@ -38,8 +38,14 @@ export const ClusterLegend = ({
       }
     });
 
+    const totalWithCluster = data.filter((d) => d.cluster_id).length || 1;
+
     return Array.from(clusterMap.entries())
-      .map(([id, info]) => ({ id, ...info }))
+      .map(([id, info]) => ({
+        id,
+        ...info,
+        percentage: (info.count / totalWithCluster) * 100,
+      }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
   }, [data]);
@@ -77,10 +83,16 @@ export const ClusterLegend = ({
         {clusterInfo.map((cluster) => (
           <div
             key={cluster.id}
-            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all hover:bg-muted/50 ${
-              selectedClusterId === cluster.id ? "bg-muted" : ""
+            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all hover:bg-muted/60 ${
+              selectedClusterId === cluster.id
+                ? "bg-muted border border-border/70"
+                : "border border-transparent"
             }`}
-            onClick={() => onClusterSelect?.(cluster.id)}
+            onClick={() =>
+              onClusterSelect?.(
+                selectedClusterId === cluster.id ? null : cluster.id,
+              )
+            }
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <div
@@ -92,9 +104,14 @@ export const ClusterLegend = ({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {cluster.count}
-              </Badge>
+              <div className="flex flex-col items-end gap-0.5">
+                <Badge variant="secondary" className="text-xs">
+                  {cluster.count}
+                </Badge>
+                <span className="text-[10px] text-muted-foreground">
+                  {cluster.percentage.toFixed(0)}%
+                </span>
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -126,4 +143,4 @@ export const ClusterLegend = ({
       </CardContent>
     </Card>
   );
-};
+});

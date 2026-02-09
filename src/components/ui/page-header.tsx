@@ -27,7 +27,7 @@ export const PageHeader = ({
       <div
         className={cn(
           "relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-50 via-blue-50 to-indigo-50 dark:from-teal-950/20 dark:via-blue-950/20 dark:to-indigo-950/20 border border-teal-200/50 dark:border-teal-800/50 p-6 md:p-8",
-          className
+          className,
         )}
       >
         <div className="relative z-10">

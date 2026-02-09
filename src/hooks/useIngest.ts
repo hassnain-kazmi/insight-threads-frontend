@@ -1,5 +1,9 @@
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/api";
+import { buildQueryString } from "@/lib/utils";
+import { REFETCH_ACTIVE_INGEST_MS } from "@/constants";
+import { queryKeys } from "./queryKeys";
 import type {
   IngestEventResponse,
   IngestEventsListResponse,
@@ -7,13 +11,18 @@ import type {
   TriggerIngestionResponse,
 } from "@/types/api";
 
-export const queryKeys = {
-  ingestEvents: (filters?: {
-    status?: string;
-    limit?: number;
-    offset?: number;
-  }) => ["ingest-events", filters] as const,
-  ingestEvent: (id: string) => ["ingest-events", id] as const,
+export const useIngestEventSourceMap = (options?: { limit?: number }) => {
+  const { data, isLoading } = useIngestEvents({
+    limit: options?.limit ?? 500,
+  });
+  const sourceMap = useMemo(() => {
+    const map = new Map<string, string | null>();
+    data?.events.forEach((event) => {
+      if (event.id) map.set(event.id, event.source);
+    });
+    return map;
+  }, [data?.events]);
+  return { sourceMap, isLoading };
 };
 
 export const useIngestEvents = (filters?: {
@@ -22,32 +31,33 @@ export const useIngestEvents = (filters?: {
   offset?: number;
   enableAutoRefresh?: boolean;
 }) => {
+  const keyParams =
+    filters === undefined
+      ? undefined
+      : {
+          limit: filters.limit,
+          offset: filters.offset,
+          status: filters.status,
+        };
   return useQuery<IngestEventsListResponse>({
-    queryKey: queryKeys.ingestEvents(filters),
+    queryKey: queryKeys.ingestEvents(keyParams),
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (filters?.limit !== undefined)
-        params.append("limit", filters.limit.toString());
-      if (filters?.offset !== undefined)
-        params.append("offset", filters.offset.toString());
-      if (filters?.status) params.append("status", filters.status);
-      const queryString = params.toString();
-      return apiClient.get<IngestEventsListResponse>(
-        `/ingest/events${queryString ? `?${queryString}` : ""}`
-      );
+      const qs = buildQueryString({
+        limit: filters?.limit,
+        offset: filters?.offset,
+        status: filters?.status,
+      });
+      return apiClient.get<IngestEventsListResponse>(`/ingest/events${qs}`);
     },
-    staleTime: 0,
+    staleTime: 1000 * 30,
     refetchInterval: (query) => {
       if (!filters?.enableAutoRefresh || !query.state.data) {
         return false;
       }
       const hasActive = query.state.data.events.some(
-        (e) =>
-          e.status === "pending" ||
-          e.status === "processing" ||
-          e.status === "running"
+        (e) => e.status === "pending" || e.status === "running",
       );
-      return hasActive ? 5000 : false;
+      return hasActive ? REFETCH_ACTIVE_INGEST_MS : false;
     },
   });
 };
@@ -69,18 +79,10 @@ export const useTriggerIngestion = () => {
     mutationFn: async (data) => {
       return apiClient.post<TriggerIngestionResponse>("/ingest/trigger", data);
     },
-    onSuccess: async (response) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["ingest-events"],
-        exact: false,
-      });
-
-      setTimeout(async () => {
-        await queryClient.refetchQueries({
-          queryKey: ["ingest-events"],
-          exact: false,
-        });
-      }, 300);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ingest-events"] });
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.clusters });
     },
   });
 };

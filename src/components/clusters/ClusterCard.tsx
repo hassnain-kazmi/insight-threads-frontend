@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProgressRing } from "@/components/ui/progress-ring";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
@@ -12,17 +13,18 @@ import { TrendingUp, FileText, ArrowRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getSentimentInfo, getClusterDisplayName } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { useCluster } from "@/hooks/useClusters";
 
-interface ClusterCardEnhancedProps {
+interface ClusterCardProps {
   cluster: ClusterResponse;
   index?: number;
 }
 
-export const ClusterCardEnhanced = ({
-  cluster,
-  index = 0,
-}: ClusterCardEnhancedProps) => {
+export const ClusterCard = ({ cluster, index = 0 }: ClusterCardProps) => {
   const navigate = useNavigate();
+  const { data: clusterDetail, isLoading: isDetailLoading } = useCluster(
+    cluster.id,
+  );
   const trendingScore = cluster.trending_score ?? 0;
   const trendingPercent = Math.round(trendingScore * 100);
 
@@ -33,7 +35,9 @@ export const ClusterCardEnhanced = ({
     description: sentimentDescription,
   } = getSentimentInfo(sentiment);
 
-  const displayName = getClusterDisplayName(cluster.id, []);
+  const keywords = clusterDetail?.keywords;
+  const displayName = getClusterDisplayName(cluster.id, keywords);
+  const showNamePlaceholder = isDetailLoading && !keywords?.length;
 
   const getGradientClass = () => {
     if (trendingPercent >= 90) {
@@ -52,7 +56,7 @@ export const ClusterCardEnhanced = ({
         "h-full flex flex-col hover:shadow-xl hover:scale-[1.02] transition-all duration-500 cursor-pointer group",
         "border-border/50 bg-gradient-to-br",
         getGradientClass(),
-        "animate-in fade-in-0 slide-in-from-bottom-4"
+        "animate-in fade-in-0 slide-in-from-bottom-4",
       )}
       style={{ animationDelay: `${index * 50}ms` }}
       onClick={() => navigate(`/clusters/${cluster.id}`)}
@@ -64,9 +68,13 @@ export const ClusterCardEnhanced = ({
               <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/30">
                 <TrendingUp className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               </div>
-              <span className="text-sm font-semibold text-foreground truncate">
-                {displayName}
-              </span>
+              {showNamePlaceholder ? (
+                <Skeleton className="h-4 w-32" />
+              ) : (
+                <span className="text-sm font-semibold text-foreground truncate">
+                  {displayName}
+                </span>
+              )}
               {trendingPercent >= 90 && (
                 <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse flex-shrink-0" />
               )}
@@ -125,10 +133,10 @@ export const ClusterCardEnhanced = ({
                 trendingPercent >= 90
                   ? "#f59e0b"
                   : trendingPercent >= 70
-                  ? "#eab308"
-                  : trendingPercent >= 50
-                  ? "#3b82f6"
-                  : "#6b7280"
+                    ? "#eab308"
+                    : trendingPercent >= 50
+                      ? "#3b82f6"
+                      : "#6b7280"
               }
               showLabel
             />
@@ -141,10 +149,10 @@ export const ClusterCardEnhanced = ({
                 trendingPercent >= 90
                   ? "bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600"
                   : trendingPercent >= 70
-                  ? "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600"
-                  : trendingPercent >= 50
-                  ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600"
-                  : "bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600"
+                    ? "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600"
+                    : trendingPercent >= 50
+                      ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600"
+                      : "bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600",
               )}
               style={{ width: `${trendingPercent}%` }}
             >

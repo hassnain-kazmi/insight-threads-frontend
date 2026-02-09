@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
+import { Sparkles } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import type { ReactNode } from "react";
 
@@ -14,8 +15,8 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center animate-pulse">
-            <span className="text-white font-bold">IT</span>
+          <div className="text-teal-600 dark:text-teal-400 animate-pulse">
+            <Sparkles className="w-10 h-10 mx-auto" strokeWidth={1.5} />
           </div>
           <div className="w-8 h-8 mx-auto border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
         </div>

@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Play, Loader2 } from "lucide-react";
+import { logError } from "@/lib/logger";
 import type { HackerNewsParams } from "@/types/api";
 
 interface HackerNewsIngestFormProps {
@@ -36,7 +37,7 @@ export const HackerNewsIngestForm = ({
       setEndpoint("topstories");
       setLimit(50);
     } catch (error) {
-      console.error("Failed to submit Hacker News ingestion:", error);
+      logError("Failed to submit Hacker News ingestion", { error });
     }
   };
 

@@ -6,12 +6,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useDocument } from "@/hooks/useDocuments";
 import { formatDistanceToNow } from "date-fns";
 import { ExternalLink, TrendingUp } from "lucide-react";
 import { getSentimentInfo } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface DocumentDetailDrawerProps {
   documentId: string | null;
@@ -30,8 +30,8 @@ const SentimentScore = ({ score }: { score: number | null }) => {
           variant === "positive"
             ? "text-emerald-600 dark:text-emerald-400"
             : variant === "negative"
-            ? "text-red-600 dark:text-red-400"
-            : "text-slate-600 dark:text-slate-400"
+              ? "text-red-600 dark:text-red-400"
+              : "text-slate-600 dark:text-slate-400"
         }`}
       >
         {score.toFixed(3)}
@@ -41,8 +41,8 @@ const SentimentScore = ({ score }: { score: number | null }) => {
           variant === "positive"
             ? "default"
             : variant === "negative"
-            ? "destructive"
-            : "secondary"
+              ? "destructive"
+              : "secondary"
         }
         className="text-xs"
       >
@@ -57,13 +57,8 @@ export const DocumentDetailDrawer = ({
   documentId,
   onClose,
 }: DocumentDetailDrawerProps) => {
-  const lastDocumentIdRef = useRef<string | null>(null);
-  if (documentId) {
-    lastDocumentIdRef.current = documentId;
-  }
-  const effectiveDocumentId = lastDocumentIdRef.current;
-
-  const { data: document, isLoading } = useDocument(effectiveDocumentId || "");
+  const navigate = useNavigate();
+  const { data: document, isLoading } = useDocument(documentId ?? "");
 
   return (
     <Dialog open={!!documentId} onOpenChange={(open) => !open && onClose()}>
@@ -181,10 +176,10 @@ export const DocumentDetailDrawer = ({
                               .includes("POSITIVE")
                               ? "default"
                               : document.sentiment.distilbert_label
-                                  .toUpperCase()
-                                  .includes("NEGATIVE")
-                              ? "destructive"
-                              : "secondary"
+                                    .toUpperCase()
+                                    .includes("NEGATIVE")
+                                ? "destructive"
+                                : "secondary"
                           }
                           className="text-xs capitalize"
                         >
@@ -210,9 +205,9 @@ export const DocumentDetailDrawer = ({
                           className="flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
                         >
                           <button
-                            onClick={() => {
-                              window.location.href = `/clusters/${membership.cluster_id}`;
-                            }}
+                            onClick={() =>
+                              navigate(`/clusters/${membership.cluster_id}`)
+                            }
                             className="flex items-center gap-2 text-xs font-medium text-primary hover:underline"
                           >
                             <span className="font-mono">
@@ -224,7 +219,7 @@ export const DocumentDetailDrawer = ({
                             <Badge variant="outline" className="text-xs">
                               Strength:{" "}
                               {(membership.membership_strength * 100).toFixed(
-                                1
+                                1,
                               )}
                               %
                             </Badge>

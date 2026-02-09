@@ -55,7 +55,7 @@ export const MetricCard = ({
     <Card
       className={cn(
         "h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 border-border/50 bg-gradient-to-br from-card to-card/50 flex flex-col",
-        onClick && "cursor-pointer hover:border-primary/30"
+        onClick && "cursor-pointer hover:border-primary/30",
       )}
       onClick={onClick}
     >
@@ -106,8 +106,8 @@ export const MetricCard = ({
                     trend.value > 0
                       ? "text-emerald-600 dark:text-emerald-400"
                       : trend.value < 0
-                      ? "text-red-600 dark:text-red-400"
-                      : "text-muted-foreground"
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-muted-foreground",
                   )}
                 >
                   {trend.value > 0 ? "↑" : trend.value < 0 ? "↓" : "→"}{" "}

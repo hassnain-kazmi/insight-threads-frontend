@@ -26,13 +26,19 @@ import {
 } from "@/components/ui/tooltip";
 import { useAnomalies } from "@/hooks/useAnomalies";
 import type { AnomalyFilters, AnomalyResponse } from "@/types/api";
-import { formatDate, formatDateTime, calculatePagination } from "@/lib/utils";
+import {
+  formatDate,
+  formatDateTime,
+  calculatePagination,
+  getErrorMessage,
+} from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 interface AnomaliesTableProps {
   filters: AnomalyFilters;
   onFiltersChange: (filters: AnomalyFilters) => void;
   onClusterClick?: (clusterId: string) => void;
+  queryFilters?: AnomalyFilters;
 }
 
 const getSeverityLabel = (score: number): string => {
@@ -66,8 +72,8 @@ const AnomalyRow = ({ anomaly, onClusterClick }: AnomalyRowProps) => {
     <>
       <TableRow
         className={cn(
-          "hover:bg-muted/50 transition-colors",
-          hasMetadata && "cursor-pointer"
+          "hover:bg-muted/50 transition-colors group",
+          hasMetadata && "cursor-pointer",
         )}
         onClick={() => hasMetadata && setIsExpanded(!isExpanded)}
       >
@@ -79,7 +85,7 @@ const AnomalyRow = ({ anomaly, onClusterClick }: AnomalyRowProps) => {
                   e.stopPropagation();
                   setIsExpanded(!isExpanded);
                 }}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 {isExpanded ? (
                   <ChevronUp className="w-4 h-4" />
@@ -95,19 +101,37 @@ const AnomalyRow = ({ anomaly, onClusterClick }: AnomalyRowProps) => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "text-xs font-medium cursor-help hover:opacity-100",
-                      getSeverityColor(anomaly.score)
-                    )}
-                  >
-                    {getSeverityLabel(anomaly.score)}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    ({anomaly.score.toFixed(2)})
-                  </span>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "text-xs font-medium cursor-help hover:opacity-100",
+                        getSeverityColor(anomaly.score),
+                      )}
+                    >
+                      {getSeverityLabel(anomaly.score)}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      ({anomaly.score.toFixed(2)})
+                    </span>
+                  </div>
+                  <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.min(anomaly.score, 1) * 100}%`,
+                        background:
+                          anomaly.score >= 0.8
+                            ? "#ef4444"
+                            : anomaly.score >= 0.5
+                              ? "#f97316"
+                              : anomaly.score >= 0.3
+                                ? "#eab308"
+                                : "#6b7280",
+                      }}
+                    />
+                  </div>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -118,10 +142,10 @@ const AnomalyRow = ({ anomaly, onClusterClick }: AnomalyRowProps) => {
                   {anomaly.score >= 0.8
                     ? "Critical: Requires immediate attention"
                     : anomaly.score >= 0.5
-                    ? "High: Significant anomaly detected"
-                    : anomaly.score >= 0.3
-                    ? "Medium: Moderate anomaly"
-                    : "Low: Minor anomaly"}
+                      ? "High: Significant anomaly detected"
+                      : anomaly.score >= 0.3
+                        ? "Medium: Moderate anomaly"
+                        : "Low: Minor anomaly"}
                 </p>
                 <p className="text-xs mt-1">
                   Score: {anomaly.score.toFixed(3)}
@@ -146,7 +170,7 @@ const AnomalyRow = ({ anomaly, onClusterClick }: AnomalyRowProps) => {
                 e.stopPropagation();
                 onClusterClick(anomaly.cluster_id);
               }}
-              className="text-xs text-primary hover:underline flex items-center gap-1"
+              className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer"
             >
               {anomaly.cluster_id.slice(0, 8)}...
               <ExternalLink className="w-3 h-3" />
@@ -158,7 +182,10 @@ const AnomalyRow = ({ anomaly, onClusterClick }: AnomalyRowProps) => {
           )}
         </TableCell>
         <TableCell className="text-xs text-muted-foreground">
-          {formatDateTime(anomaly.created_at)}
+          <div className="flex items-center justify-between gap-2">
+            <span>{formatDateTime(anomaly.created_at)}</span>
+            <ChevronRight className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-80 transition-opacity" />
+          </div>
         </TableCell>
       </TableRow>
       {isExpanded && hasMetadata && (
@@ -183,7 +210,7 @@ const AnomalyRow = ({ anomaly, onClusterClick }: AnomalyRowProps) => {
                             : String(value)}
                         </span>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               ) : (
@@ -203,11 +230,27 @@ export const AnomaliesTable = ({
   filters,
   onFiltersChange,
   onClusterClick,
+  queryFilters,
 }: AnomaliesTableProps) => {
-  const { data, isLoading, error } = useAnomalies(filters);
+  const query = useAnomalies(queryFilters ?? filters);
+  const { data: rawData, isLoading, error } = query;
+  const offset = filters.offset ?? 0;
+  const limit = filters.limit ?? 50;
+  const data =
+    rawData && queryFilters
+      ? {
+          ...rawData,
+          anomalies: rawData.anomalies.slice(offset, offset + limit),
+        }
+      : rawData;
+
+  const paginationTotal =
+    rawData && queryFilters
+      ? (rawData.total ?? rawData.anomalies.length)
+      : ((rawData ?? data)?.total ?? 0);
 
   const { pageSize, currentPage, totalPages, startItem, endItem } = data
-    ? calculatePagination(filters.offset, filters.limit, data.total)
+    ? calculatePagination(filters.offset, filters.limit, paginationTotal)
     : {
         pageSize: filters.limit || 50,
         currentPage: 1,
@@ -267,8 +310,7 @@ export const AnomaliesTable = ({
     return (
       <div className="border border-border rounded-xl p-8 text-center">
         <p className="text-sm text-destructive">
-          Failed to load anomalies:{" "}
-          {error instanceof Error ? error.message : "Unknown error"}
+          Failed to load anomalies: {getErrorMessage(error)}
         </p>
       </div>
     );
@@ -319,7 +361,7 @@ export const AnomaliesTable = ({
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Showing {startItem} to {endItem} of {data.total} anomalies
+            Showing {startItem} to {endItem} of {paginationTotal} anomalies
           </div>
           <div className="flex items-center gap-2">
             <Button

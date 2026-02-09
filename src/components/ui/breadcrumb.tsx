@@ -18,29 +18,24 @@ const getBreadcrumbsFromPath = (pathname: string): BreadcrumbItem[] => {
 
   if (segments.length === 0) return breadcrumbs;
 
-  segments.forEach((segment, index) => {
-    const href = "/" + segments.slice(0, index + 1).join("/");
-    let label = segment;
+  const segmentLabels: Record<string, string> = {
+    dashboard: "Dashboard",
+    ingest: "Ingestion",
+    documents: "Documents",
+    clusters: "Clusters",
+    insights: "Insights",
+    anomalies: "Anomalies",
+    umap: "UMAP",
+    search: "Search",
+  };
 
-    if (segment === "dashboard") {
-      label = "Dashboard";
-    } else if (segment === "ingest") {
-      label = "Ingestion";
-    } else if (segment === "documents") {
-      label = "Documents";
-    } else if (segment === "clusters") {
-      label = "Clusters";
-    } else if (segment === "insights") {
-      label = "Insights";
-    } else if (segment === "anomalies") {
-      label = "Anomalies";
-    } else if (segment === "umap") {
-      label = "UMAP";
-    } else if (segment === "search") {
-      label = "Search";
-    } else if (segment.length === 36 || segment.match(/^[a-f0-9-]{36}$/i)) {
-      label = segment.slice(0, 8);
-    }
+  segments.forEach((segment, index) => {
+    const href = `/${segments.slice(0, index + 1).join("/")}`;
+    const label =
+      segmentLabels[segment] ??
+      (segment.length === 36 || /^[a-f0-9-]{36}$/i.test(segment)
+        ? segment.slice(0, 8)
+        : segment);
 
     breadcrumbs.push({
       label,

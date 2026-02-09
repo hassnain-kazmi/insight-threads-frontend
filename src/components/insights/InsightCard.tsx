@@ -3,14 +3,15 @@ import { Badge } from "@/components/ui/badge";
 import type { InsightResponse } from "@/types/api";
 import { Lightbulb, Layers, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, getClusterDisplayName } from "@/lib/utils";
+import { useCluster } from "@/hooks/useClusters";
 
 interface InsightCardProps {
   insight: InsightResponse;
 }
 
 const getConfidenceColor = (
-  confidence: number | null
+  confidence: number | null,
 ): {
   variant: "default" | "secondary" | "positive" | "neutral";
   label: string;
@@ -29,10 +30,21 @@ const getConfidenceColor = (
 };
 
 export const InsightCard = ({ insight }: InsightCardProps) => {
+  const { data: clusterDetail } = useCluster(insight.cluster_id);
+  const clusterDisplayName = getClusterDisplayName(
+    insight.cluster_id,
+    clusterDetail?.keywords,
+  );
   const confidenceInfo = getConfidenceColor(insight.confidence);
+  const isHighConfidence =
+    insight.confidence !== null && insight.confidence >= 0.8;
 
   return (
-    <Card className="h-full hover:shadow-md transition-all duration-200 border-border/50 hover:border-border flex flex-col">
+    <Card
+      className={`h-full hover:shadow-md transition-all duration-200 border-border/50 hover:border-border flex flex-col ${
+        isHighConfidence ? "border-violet-300/80 dark:border-violet-600/60" : ""
+      }`}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -61,9 +73,7 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group mt-auto"
         >
           <Layers className="w-4 h-4 group-hover:text-violet-500 transition-colors" />
-          <span className="font-medium">
-            View Cluster #{insight.cluster_id.slice(0, 8)}
-          </span>
+          <span className="font-medium">View {clusterDisplayName}</span>
         </Link>
       </CardContent>
     </Card>

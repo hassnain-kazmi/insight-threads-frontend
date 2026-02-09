@@ -82,4 +82,3 @@ export const Sparkline = ({
     </svg>
   );
 };
-

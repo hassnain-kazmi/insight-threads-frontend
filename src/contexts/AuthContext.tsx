@@ -18,7 +18,6 @@ interface AuthContextType {
   signUp: (email: string, password: string, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  getAccessToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,7 +39,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         } = await supabase.auth.getSession();
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-      } catch (error) {
+      } catch {
+        // Session check failed; leave user/session null, loading false
       } finally {
         setLoading(false);
       }
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
         setLoading(false);
-      }
+      },
     );
 
     return () => {
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
       if (error) throw error;
     },
-    []
+    [],
   );
 
   const signOut = useCallback(async () => {
@@ -95,13 +95,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (error) throw error;
   }, []);
 
-  const getAccessToken = useCallback(async () => {
-    const {
-      data: { session: currentSession },
-    } = await supabase.auth.getSession();
-    return currentSession?.access_token ?? null;
-  }, []);
-
   const value: AuthContextType = {
     user,
     session,
@@ -111,7 +104,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     signUp,
     signOut,
     resetPassword,
-    getAccessToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { FileText, Github, Newspaper, Rss } from "lucide-react";
 import type { DocumentResponse } from "@/types/api";
-import { getSourceTypeFromPath } from "@/lib/utils";
-import { useIngestEvents } from "@/hooks/useIngest";
+import { getDocumentSourceType } from "@/lib/utils";
+import { useIngestEventSourceMap } from "@/hooks/useIngest";
 
 interface SourceDistributionProps {
   documents: DocumentResponse[];
@@ -18,36 +18,9 @@ const sourceConfig = {
 };
 
 export const SourceDistribution = ({ documents }: SourceDistributionProps) => {
-  const { data: ingestEventsData, isLoading: isLoadingEvents } =
-    useIngestEvents({ limit: 500 });
-
-  const ingestEventSourceMap = useMemo(() => {
-    const map = new Map<string, string | null>();
-    ingestEventsData?.events.forEach((event) => {
-      if (event.id) {
-        map.set(event.id, event.source);
-      }
-    });
-    return map;
-  }, [ingestEventsData]);
-
-  const getDocumentSourceType = useMemo(() => {
-    return (
-      document: DocumentResponse
-    ): "rss" | "hackernews" | "github" | "unknown" => {
-      if (document.ingest_event_id) {
-        const source = ingestEventSourceMap.get(document.ingest_event_id);
-        if (
-          source === "rss" ||
-          source === "hackernews" ||
-          source === "github"
-        ) {
-          return source;
-        }
-      }
-      return getSourceTypeFromPath(document.source_path);
-    };
-  }, [ingestEventSourceMap]);
+  const { sourceMap, isLoading: isLoadingEvents } = useIngestEventSourceMap({
+    limit: 500,
+  });
 
   const distribution = useMemo(() => {
     const counts: Record<string, number> = {
@@ -58,7 +31,7 @@ export const SourceDistribution = ({ documents }: SourceDistributionProps) => {
     };
 
     documents.forEach((doc) => {
-      const sourceType = getDocumentSourceType(doc);
+      const sourceType = getDocumentSourceType(doc, sourceMap);
       if (sourceType in counts) {
         counts[sourceType] = (counts[sourceType] || 0) + 1;
       } else {
@@ -74,7 +47,7 @@ export const SourceDistribution = ({ documents }: SourceDistributionProps) => {
         count,
         percentage: total > 0 ? (count / total) * 100 : 0,
       }));
-  }, [documents, getDocumentSourceType]);
+  }, [documents, sourceMap]);
 
   const total = documents.length;
 

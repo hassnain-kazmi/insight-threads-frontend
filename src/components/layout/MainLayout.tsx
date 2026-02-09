@@ -4,6 +4,7 @@ import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { IngestionNotificationListener } from "@/components/ingest/IngestionNotificationListener";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { cn } from "@/lib/utils";
 
 export const MainLayout = () => {
@@ -37,12 +38,14 @@ export const MainLayout = () => {
       <main
         className={cn(
           "pt-16 min-h-screen transition-all duration-300 ease-in-out",
-          sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
+          sidebarCollapsed ? "lg:pl-16" : "lg:pl-64",
         )}
       >
         <ScrollToTop />
         <div className="p-4 lg:p-6">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </div>
       </main>
     </div>

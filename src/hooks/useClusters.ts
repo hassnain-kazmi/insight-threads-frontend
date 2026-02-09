@@ -1,18 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/api";
-import type {
-  ClustersListResponse,
-  ClusterDetailResponse,
-} from "@/types/api";
-
-export const queryKeys = {
-  clusters: () => ["clusters"] as const,
-  cluster: (id: string) => ["clusters", id] as const,
-};
+import type { ClustersListResponse, ClusterDetailResponse } from "@/types/api";
+import { queryKeys } from "./queryKeys";
 
 export const useClusters = () => {
   return useQuery<ClustersListResponse>({
-    queryKey: queryKeys.clusters(),
+    queryKey: queryKeys.clusters,
     queryFn: async () => {
       return apiClient.get<ClustersListResponse>(`/clusters`);
     },

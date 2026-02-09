@@ -5,40 +5,28 @@ import type {
   DocumentDetailResponse,
   DocumentFilters,
 } from "@/types/api";
-
-export const queryKeys = {
-  documents: (filters: DocumentFilters) => ["documents", filters] as const,
-  document: (id: string) => ["documents", id] as const,
-};
+import { buildQueryString } from "@/lib/utils";
+import { REFETCH_UNPROCESSED_DOCS_MS } from "@/constants";
+import { queryKeys } from "./queryKeys";
 
 export const useDocuments = (
   filters: DocumentFilters = {},
-  options?: { enableAutoRefresh?: boolean }
+  options?: { enableAutoRefresh?: boolean },
 ) => {
   return useQuery<DocumentsListResponse>({
     queryKey: queryKeys.documents(filters),
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (filters.limit !== undefined)
-        params.append("limit", filters.limit.toString());
-      if (filters.offset !== undefined)
-        params.append("offset", filters.offset.toString());
-      if (filters.processed !== undefined)
-        params.append("processed", filters.processed.toString());
-      if (filters.ingest_event_id)
-        params.append("ingest_event_id", filters.ingest_event_id);
-      if (filters.cluster_id) params.append("cluster_id", filters.cluster_id);
-      if (filters.source_type)
-        params.append("source_type", filters.source_type);
-      if (filters.sentiment_min !== undefined)
-        params.append("sentiment_min", filters.sentiment_min.toString());
-      if (filters.sentiment_max !== undefined)
-        params.append("sentiment_max", filters.sentiment_max.toString());
-
-      const queryString = params.toString();
-      return apiClient.get<DocumentsListResponse>(
-        `/documents${queryString ? `?${queryString}` : ""}`
-      );
+      const qs = buildQueryString({
+        limit: filters.limit,
+        offset: filters.offset,
+        processed: filters.processed,
+        ingest_event_id: filters.ingest_event_id,
+        cluster_id: filters.cluster_id,
+        source_type: filters.source_type,
+        sentiment_min: filters.sentiment_min,
+        sentiment_max: filters.sentiment_max,
+      });
+      return apiClient.get<DocumentsListResponse>(`/documents${qs}`);
     },
     staleTime: 0,
     refetchInterval: (query) => {
@@ -46,9 +34,9 @@ export const useDocuments = (
         return false;
       }
       const hasUnprocessed = query.state.data.documents.some(
-        (doc) => !doc.processed
+        (doc) => !doc.processed,
       );
-      return hasUnprocessed ? 10000 : false;
+      return hasUnprocessed ? REFETCH_UNPROCESSED_DOCS_MS : false;
     },
   });
 };

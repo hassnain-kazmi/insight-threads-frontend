@@ -13,6 +13,7 @@ import { InsightsPage } from "@/features/insights/InsightsPage";
 import { AnomaliesPage } from "@/features/anomalies/AnomaliesPage";
 import { UmapPage } from "@/features/umap/UmapPage";
 import { SearchPage } from "@/features/search/SearchPage";
+import { NotFoundPage } from "@/features/NotFoundPage";
 
 export const router = createBrowserRouter([
   {
@@ -75,10 +76,10 @@ export const router = createBrowserRouter([
         path: "search",
         element: <SearchPage />,
       },
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
     ],
-  },
-  {
-    path: "*",
-    element: <Navigate to="/dashboard" replace />,
   },
 ]);

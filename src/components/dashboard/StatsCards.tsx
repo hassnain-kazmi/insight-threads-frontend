@@ -6,11 +6,12 @@ import { useIngestEvents } from "@/hooks/useIngest";
 import { useInsights } from "@/hooks/useInsights";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
+import { TRENDING_HOT_THRESHOLD } from "@/constants";
 
 export const StatsCards = () => {
   const navigate = useNavigate();
   const { data: clustersData, isLoading: clustersLoading } = useClusters();
-  const { isLoading: ingestLoading } = useIngestEvents();
+  const { isLoading: ingestLoading } = useIngestEvents({ limit: 5 });
   const { data: insightsData, isLoading: insightsLoading } = useInsights();
 
   const isLoading = clustersLoading || ingestLoading;
@@ -24,10 +25,10 @@ export const StatsCards = () => {
     const totalClusters = clustersData.total ?? 0;
     const totalDocuments = clustersData.clusters.reduce(
       (sum, cluster) => sum + cluster.document_count,
-      0
+      0,
     );
     const trendingClusters = clustersData.clusters.filter(
-      (c) => (c.trending_score ?? 0) > 0.9
+      (c) => (c.trending_score ?? 0) > TRENDING_HOT_THRESHOLD,
     ).length;
     return { totalClusters, totalDocuments, trendingClusters };
   }, [clustersData]);
@@ -50,7 +51,7 @@ export const StatsCards = () => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {[
         {
-          label: "Total Documents",
+          label: "Documents Ingested",
           value: isLoading ? "—" : totalDocuments.toLocaleString(),
           icon: FileText,
           color: "text-blue-500",
@@ -70,7 +71,7 @@ export const StatsCards = () => {
             ) : undefined,
         },
         {
-          label: "Active Clusters",
+          label: "Topics Detected",
           value: isLoading ? "—" : totalClusters,
           icon: Layers,
           color: "text-emerald-500",
@@ -81,7 +82,7 @@ export const StatsCards = () => {
           delay: 50,
         },
         {
-          label: "Trending Topics",
+          label: "Hot Topics",
           value: isLoading ? "—" : trendingClusters,
           icon: TrendingUp,
           color: "text-amber-500",

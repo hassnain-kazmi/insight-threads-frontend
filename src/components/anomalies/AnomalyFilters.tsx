@@ -35,7 +35,7 @@ export const AnomalyFilters = ({
 
   const handleFilterChange = (
     key: keyof AnomalyFiltersType,
-    value: unknown
+    value: unknown,
   ) => {
     onFiltersChange({
       ...filters,
@@ -55,7 +55,7 @@ export const AnomalyFilters = ({
     <div
       className={cn(
         "bg-card border border-border rounded-xl p-4 space-y-4",
-        className
+        className,
       )}
     >
       <div className="flex items-center justify-between">
@@ -91,7 +91,7 @@ export const AnomalyFilters = ({
             onValueChange={(value) =>
               handleFilterChange(
                 "cluster_id",
-                value === "all" ? undefined : value
+                value === "all" ? undefined : value,
               )
             }
           >

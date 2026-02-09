@@ -1,10 +1,23 @@
-import { ClusterCardEnhanced } from "@/components/clusters/ClusterCardEnhanced";
+import { ClusterCard } from "@/components/clusters/ClusterCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useClusters } from "@/hooks/useClusters";
-import { Layers } from "lucide-react";
+import { Layers, ChevronLeft, ChevronRight } from "lucide-react";
+import { calculatePagination } from "@/lib/utils";
+import { DEFAULT_PAGE_SIZE } from "@/constants";
 
-export const ClusterList = () => {
+interface ClusterListProps {
+  limit?: number;
+  offset?: number;
+  onPageChange?: (page: number) => void;
+}
+
+export const ClusterList = ({
+  limit = DEFAULT_PAGE_SIZE,
+  offset = 0,
+  onPageChange,
+}: ClusterListProps) => {
   const { data, isLoading, error } = useClusters();
 
   if (isLoading) {
@@ -73,15 +86,56 @@ export const ClusterList = () => {
     );
   }
 
+  const total = data.clusters.length;
+  const { currentPage, totalPages, startItem, endItem } = calculatePagination(
+    offset,
+    limit,
+    total,
+  );
+  const paginatedClusters = data.clusters.slice(offset, offset + limit);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {data.clusters.map((cluster, index) => (
-        <ClusterCardEnhanced
-          key={cluster.id}
-          cluster={cluster}
-          index={index}
-        />
-      ))}
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {paginatedClusters.map((cluster, index) => (
+          <ClusterCard
+            key={cluster.id}
+            cluster={cluster}
+            index={offset + index}
+          />
+        ))}
+      </div>
+      {totalPages > 1 && onPageChange && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages} · Showing {startItem}–{endItem}{" "}
+            of {total} clusters
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

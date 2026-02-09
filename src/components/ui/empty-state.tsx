@@ -20,7 +20,7 @@ export const EmptyState = ({
     <div
       className={cn(
         "bg-card border border-border rounded-xl p-8 text-center",
-        className
+        className,
       )}
     >
       {Icon && (

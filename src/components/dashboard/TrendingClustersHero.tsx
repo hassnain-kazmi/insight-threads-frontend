@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import type { ClusterResponse } from "@/types/api";
 import { getClusterDisplayName } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { TRENDING_HOT_THRESHOLD } from "@/constants";
 
 interface TrendingClustersHeroProps {
   clusters: ClusterResponse[];
@@ -21,7 +22,7 @@ export const TrendingClustersHero = ({
 
   const trendingClusters = useMemo(() => {
     return clusters
-      .filter((c) => (c.trending_score ?? 0) > 0.9)
+      .filter((c) => (c.trending_score ?? 0) > TRENDING_HOT_THRESHOLD)
       .sort((a, b) => (b.trending_score ?? 0) - (a.trending_score ?? 0))
       .slice(0, 3);
   }, [clusters]);
@@ -74,7 +75,7 @@ export const TrendingClustersHero = ({
             className={cn(
               "group cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all duration-500 border-border/50",
               "bg-gradient-to-br from-amber-50/80 via-orange-50/80 to-red-50/80 dark:from-amber-950/20 dark:via-orange-950/20 dark:to-red-950/20",
-              "animate-in fade-in-0 slide-in-from-bottom-4"
+              "animate-in fade-in-0 slide-in-from-bottom-4",
             )}
             style={{ animationDelay: `${index * 100}ms` }}
             onClick={() => navigate(`/clusters/${cluster.id}`)}
@@ -97,6 +98,14 @@ export const TrendingClustersHero = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                    {index === 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] uppercase tracking-wide"
+                      >
+                        Top trend
+                      </Badge>
+                    )}
                     <h3 className="text-lg font-semibold text-foreground truncate">
                       {displayName}
                     </h3>

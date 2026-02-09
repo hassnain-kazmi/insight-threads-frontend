@@ -1,6 +1,7 @@
 import { useAuthContext } from "@/contexts/AuthContext";
 import { LogOut, User, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logError } from "@/lib/logger";
 
 interface TopNavProps {
   sidebarCollapsed: boolean;
@@ -17,7 +18,7 @@ export const TopNav = ({
     try {
       await signOut();
     } catch (error) {
-      console.error("Failed to sign out:", error);
+      logError("Failed to sign out", { error });
     }
   };
 
@@ -26,7 +27,7 @@ export const TopNav = ({
       className={cn(
         "fixed top-0 right-0 z-30 h-16 bg-background/80 backdrop-blur-sm border-b border-border transition-all duration-300 ease-in-out",
         sidebarCollapsed ? "left-16" : "left-64",
-        "max-lg:left-0"
+        "max-lg:left-0",
       )}
     >
       <div className="h-full px-4 lg:px-6 flex items-center justify-between">

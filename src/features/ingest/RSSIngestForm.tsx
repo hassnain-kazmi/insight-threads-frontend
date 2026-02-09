@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, X, Play, Loader2 } from "lucide-react";
 import type { RSSParams } from "@/types/api";
+import { getErrorMessage } from "@/lib/utils";
 
 interface RSSIngestFormProps {
   onSubmit: (params: RSSParams) => void | Promise<void>;
@@ -13,6 +14,7 @@ interface RSSIngestFormProps {
 export const RSSIngestForm = ({ onSubmit, isLoading }: RSSIngestFormProps) => {
   const [feedUrls, setFeedUrls] = useState<string[]>([""]);
   const [limit, setLimit] = useState<number>(50);
+  const [error, setError] = useState<string | null>(null);
 
   const addFeedUrl = () => {
     setFeedUrls([...feedUrls, ""]);
@@ -32,8 +34,10 @@ export const RSSIngestForm = ({ onSubmit, isLoading }: RSSIngestFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     const validUrls = feedUrls.filter((url) => url.trim() !== "");
     if (validUrls.length === 0) {
+      setError("Add at least one feed URL.");
       return;
     }
     try {
@@ -43,8 +47,8 @@ export const RSSIngestForm = ({ onSubmit, isLoading }: RSSIngestFormProps) => {
       });
       setFeedUrls([""]);
       setLimit(50);
-    } catch (error) {
-      console.error("Failed to submit RSS ingestion:", error);
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   };
 
@@ -89,6 +93,7 @@ export const RSSIngestForm = ({ onSubmit, isLoading }: RSSIngestFormProps) => {
           <Plus className="h-4 w-4 mr-2" />
           Add Feed URL
         </Button>
+        {error && <p className="text-xs text-destructive mt-1">{error}</p>}
       </div>
 
       <div className="space-y-2">
@@ -99,7 +104,7 @@ export const RSSIngestForm = ({ onSubmit, isLoading }: RSSIngestFormProps) => {
           min="1"
           max="500"
           value={limit}
-          onChange={(e) => setLimit(parseInt(e.target.value) || 50)}
+          onChange={(e) => setLimit(parseInt(e.target.value, 10) || 50)}
           placeholder="50"
         />
         <p className="text-xs text-muted-foreground">

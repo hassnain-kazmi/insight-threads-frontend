@@ -6,18 +6,25 @@ import { InfoNote } from "@/components/ui/info-note";
 import { AnomalyFilters as AnomalyFiltersComponent } from "@/components/anomalies/AnomalyFilters";
 import { AnomaliesTable } from "@/components/anomalies/AnomaliesTable";
 import { AnomalyTimeline } from "@/components/anomalies/AnomalyTimeline";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAnomalies } from "@/hooks/useAnomalies";
 import type { AnomalyFilters } from "@/types/api";
 import { useNavigate } from "react-router-dom";
+import { DEFAULT_PAGE_SIZE, ANOMALIES_TIMELINE_LIMIT } from "@/constants";
 
 export const AnomaliesPage = () => {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<AnomalyFilters>({
-    limit: 50,
+    limit: DEFAULT_PAGE_SIZE,
     offset: 0,
   });
 
-  const { data: anomaliesData } = useAnomalies({ limit: 1000, offset: 0 });
+  const timelineFilters: AnomalyFilters = {
+    ...filters,
+    limit: ANOMALIES_TIMELINE_LIMIT,
+    offset: 0,
+  };
+  const { data: anomaliesData } = useAnomalies(timelineFilters);
 
   const handleClusterClick = (clusterId: string) => {
     navigate(`/clusters/${clusterId}`);
@@ -64,21 +71,30 @@ export const AnomaliesPage = () => {
           </p>
         </InfoNote>
 
-        <div className="animate-in fade-in-0 slide-in-from-top-2 duration-300">
-          <AnomalyFiltersComponent
-            filters={filters}
-            onFiltersChange={setFilters}
-          />
-        </div>
-
-        {anomaliesData && anomaliesData.anomalies.length > 0 && (
-          <div
-            className="animate-in fade-in-0 slide-in-from-bottom-2"
-            style={{ animationDelay: "50ms" }}
-          >
-            <AnomalyTimeline anomalies={anomaliesData.anomalies} days={30} />
-          </div>
-        )}
+        <Card className="animate-in fade-in-0 slide-in-from-top-2 duration-300">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-muted-foreground">
+              Filters & Timeline
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <AnomalyFiltersComponent
+              filters={filters}
+              onFiltersChange={setFilters}
+            />
+            {anomaliesData && anomaliesData.anomalies.length > 0 && (
+              <div
+                className="animate-in fade-in-0 slide-in-from-bottom-2"
+                style={{ animationDelay: "50ms" }}
+              >
+                <AnomalyTimeline
+                  anomalies={anomaliesData.anomalies}
+                  days={30}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <div
           className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
@@ -88,6 +104,7 @@ export const AnomaliesPage = () => {
             filters={filters}
             onFiltersChange={setFilters}
             onClusterClick={handleClusterClick}
+            queryFilters={timelineFilters}
           />
         </div>
       </div>

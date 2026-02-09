@@ -2,15 +2,33 @@ import { useMemo } from "react";
 import { InsightCard } from "./InsightCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 import { useInsights } from "@/hooks/useInsights";
-import { Lightbulb, Search } from "lucide-react";
+import {
+  getErrorMessage,
+  calculatePagination,
+  getClusterDisplayName,
+} from "@/lib/utils";
+import { Lightbulb, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { DEFAULT_PAGE_SIZE } from "@/constants";
 
 interface InsightListProps {
   clusterId?: string;
+  selectedClusterName?: string;
   searchQuery?: string;
+  limit?: number;
+  offset?: number;
+  onPageChange?: (page: number) => void;
 }
 
-export const InsightList = ({ clusterId, searchQuery = "" }: InsightListProps) => {
+export const InsightList = ({
+  clusterId,
+  selectedClusterName,
+  searchQuery = "",
+  limit = DEFAULT_PAGE_SIZE,
+  offset = 0,
+  onPageChange,
+}: InsightListProps) => {
   const { data, isLoading, error } = useInsights(clusterId);
 
   const filteredInsights = useMemo(() => {
@@ -19,7 +37,7 @@ export const InsightList = ({ clusterId, searchQuery = "" }: InsightListProps) =
     }
     const query = searchQuery.toLowerCase();
     return data.insights.filter((insight) =>
-      insight.insight_text.toLowerCase().includes(query)
+      insight.insight_text.toLowerCase().includes(query),
     );
   }, [data, searchQuery]);
 
@@ -59,7 +77,7 @@ export const InsightList = ({ clusterId, searchQuery = "" }: InsightListProps) =
           Error loading insights
         </h3>
         <p className="text-muted-foreground">
-          {error instanceof Error ? error.message : "Failed to load insights"}
+          {getErrorMessage(error) || "Failed to load insights"}
         </p>
       </div>
     );
@@ -89,6 +107,14 @@ export const InsightList = ({ clusterId, searchQuery = "" }: InsightListProps) =
     );
   }
 
+  const total = filteredInsights.length;
+  const { currentPage, totalPages, startItem, endItem } = calculatePagination(
+    offset,
+    limit,
+    total,
+  );
+  const paginatedInsights = filteredInsights.slice(offset, offset + limit);
+
   return (
     <div className="space-y-4">
       {searchQuery.trim() && (
@@ -96,8 +122,14 @@ export const InsightList = ({ clusterId, searchQuery = "" }: InsightListProps) =
           Showing {filteredInsights.length} of {data.insights.length} insights
         </p>
       )}
+      {clusterId && (
+        <p className="text-xs text-muted-foreground">
+          Cluster scope:{" "}
+          {selectedClusterName ?? getClusterDisplayName(clusterId)}
+        </p>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {filteredInsights.map((insight, index) => (
+        {paginatedInsights.map((insight, index) => (
           <div
             key={insight.id}
             className="animate-in fade-in-0 slide-in-from-bottom-2 h-full"
@@ -107,6 +139,36 @@ export const InsightList = ({ clusterId, searchQuery = "" }: InsightListProps) =
           </div>
         ))}
       </div>
+      {totalPages > 1 && onPageChange && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Showing {startItem}–{endItem} of {total} insights
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground tabular-nums">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

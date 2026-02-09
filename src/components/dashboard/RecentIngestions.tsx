@@ -4,7 +4,7 @@ import { useIngestEvents } from "@/hooks/useIngest";
 import { IngestStatusBadge } from "@/components/ingest/IngestStatusBadge";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { getSourceDisplayName } from "@/lib/utils";
+import { getSourceDisplayName, getErrorMessage } from "@/lib/utils";
 
 export const RecentIngestions = () => {
   const navigate = useNavigate();
@@ -31,7 +31,22 @@ export const RecentIngestions = () => {
     );
   }
 
-  if (error || !data || data.events.length === 0) {
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Ingestions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive text-center py-4">
+            Failed to load: {getErrorMessage(error)}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data || data.events.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -49,7 +64,12 @@ export const RecentIngestions = () => {
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
-        <CardTitle>Recent Ingestions</CardTitle>
+        <div className="flex flex-col gap-1">
+          <CardTitle>Recent Ingestions</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Last 5 ingestion jobs · Click any row to open Ingestion Management.
+          </p>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-0">
@@ -62,7 +82,18 @@ export const RecentIngestions = () => {
               >
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                    <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
+                      <span
+                        className="inline-block h-2 w-2 rounded-full"
+                        style={{
+                          backgroundColor:
+                            event.status === "completed"
+                              ? "#10b981"
+                              : event.status === "failed"
+                                ? "#ef4444"
+                                : "#f59e0b",
+                        }}
+                      />
                       {getSourceDisplayName(event.source)}
                     </span>
                     <IngestStatusBadge status={event.status} />

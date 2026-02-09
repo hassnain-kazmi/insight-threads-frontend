@@ -12,9 +12,18 @@ export const IngestionNotificationListener = () => {
   });
 
   const previousStatusMap = useRef<Map<string, string>>(new Map());
+  const isFirstRun = useRef(true);
 
   useEffect(() => {
     if (!data?.events) return;
+
+    if (isFirstRun.current) {
+      previousStatusMap.current = new Map(
+        data.events.map((e: IngestEventResponse) => [e.id, e.status]),
+      );
+      isFirstRun.current = false;
+      return;
+    }
 
     data.events.forEach((event: IngestEventResponse) => {
       const previousStatus = previousStatusMap.current.get(event.id);
@@ -28,7 +37,7 @@ export const IngestionNotificationListener = () => {
       ) {
         toast.success("Ingestion completed", {
           description: `${getSourceDisplayName(
-            event.source
+            event.source,
           )} ingestion has finished successfully.`,
           icon: <CheckCircle2 className="w-4 h-4" />,
           duration: 5000,
@@ -43,7 +52,7 @@ export const IngestionNotificationListener = () => {
       ) {
         toast.error("Ingestion failed", {
           description: `${getSourceDisplayName(
-            event.source
+            event.source,
           )} ingestion failed. ${
             event.error_message
               ? event.error_message

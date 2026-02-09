@@ -1,14 +1,25 @@
+import { useState } from "react";
 import { TrendingUp, Layers, Sparkles } from "lucide-react";
 import { ClusterList } from "@/components/clusters/ClusterList";
 import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
 import { InfoNote } from "@/components/ui/info-note";
 import { useClusters } from "@/hooks/useClusters";
+import { TRENDING_HOT_THRESHOLD, DEFAULT_PAGE_SIZE } from "@/constants";
 
 export const ClustersPage = () => {
   const { data } = useClusters();
+  const [offset, setOffset] = useState(0);
+  const limit = DEFAULT_PAGE_SIZE;
 
-  const highTrendingCount = data?.clusters.filter((c) => (c.trending_score ?? 0) > 0.9).length ?? 0;
+  const highTrendingCount =
+    data?.clusters.filter(
+      (c) => (c.trending_score ?? 0) > TRENDING_HOT_THRESHOLD,
+    ).length ?? 0;
+
+  const handlePageChange = (newPage: number) => {
+    setOffset((newPage - 1) * limit);
+  };
 
   return (
     <PageTransition>
@@ -22,13 +33,17 @@ export const ClustersPage = () => {
 
         <InfoNote variant="info">
           <p>
-            <strong>Understanding Clusters:</strong> Clusters are groups of semantically similar documents automatically 
-            organized by topic. Each cluster represents a theme or subject that appears across your ingested content.
+            <strong>Understanding Clusters:</strong> Clusters are groups of
+            semantically similar documents automatically organized by topic.
+            Each cluster represents a theme or subject that appears across your
+            ingested content.
           </p>
           <p className="mt-2 text-xs">
-            <strong>Trending Score:</strong> Clusters are sorted by trending score (0-100%), which indicates how much 
-            activity and momentum a topic has. Higher scores mean the topic is gaining more attention. Click any cluster 
-            to view detailed analytics, keywords, timeseries data, AI insights, and detected anomalies.
+            <strong>Trending Score:</strong> Clusters are sorted by trending
+            score (0-100%), which indicates how much activity and momentum a
+            topic has. Higher scores mean the topic is gaining more attention.
+            Click any cluster to view detailed analytics, keywords, timeseries
+            data, AI insights, and detected anomalies.
           </p>
         </InfoNote>
 
@@ -45,8 +60,15 @@ export const ClustersPage = () => {
           )}
         </div>
 
-        <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{ animationDelay: "100ms" }}>
-          <ClusterList />
+        <div
+          className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: "100ms" }}
+        >
+          <ClusterList
+            limit={limit}
+            offset={offset}
+            onPageChange={handlePageChange}
+          />
         </div>
       </div>
     </PageTransition>

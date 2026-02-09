@@ -17,20 +17,48 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
+import { TRENDING_HOT_THRESHOLD } from "@/constants";
+import {
+  getErrorMessage,
+  formatRelativeTime,
+  getSourceDisplayName,
+} from "@/lib/utils";
+import { useIngestEvents } from "@/hooks/useIngest";
 
 export const DashboardPage = () => {
   const { data, isLoading, error } = useClusters();
+  const { data: ingestEventsData } = useIngestEvents({ limit: 5 });
   const navigate = useNavigate();
 
   const trendingClusters = useMemo(() => {
     if (!data) return [];
-    return data.clusters.filter((c) => (c.trending_score ?? 0) > 0.9);
+    return data.clusters.filter(
+      (c) => (c.trending_score ?? 0) > TRENDING_HOT_THRESHOLD,
+    );
   }, [data]);
+
+  const heroSummary = useMemo(() => {
+    if (!data || !data.clusters.length) {
+      return "No clusters yet. Ingest data to start seeing trends and insights.";
+    }
+    const totalClusters = data.total ?? data.clusters.length;
+    const totalDocuments = data.clusters.reduce(
+      (sum, cluster) => sum + cluster.document_count,
+      0,
+    );
+    const lastEvent = ingestEventsData?.events?.[0];
+    if (!lastEvent) {
+      return `You have ${totalDocuments.toLocaleString()} documents across ${totalClusters} clusters. Trigger a new ingestion to keep things fresh.`;
+    }
+    const sourceLabel = getSourceDisplayName(lastEvent.source);
+    const when = formatRelativeTime(lastEvent.started_at);
+    return `You have ${totalDocuments.toLocaleString()} documents across ${totalClusters} clusters. Last ${sourceLabel.toLowerCase()} ingestion started ${when}.`;
+  }, [data, ingestEventsData]);
 
   return (
     <PageTransition delay={100}>
       <div className="space-y-8">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-50 via-blue-50 to-indigo-50 dark:from-teal-950/20 dark:via-blue-950/20 dark:to-indigo-950/20 border border-teal-200/50 dark:border-teal-800/50 p-8 md:p-12">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-50 via-blue-50 to-indigo-50 dark:from-teal-950/15 dark:via-blue-950/15 dark:to-indigo-950/15 border border-teal-200/50 dark:border-teal-800/50 p-8 md:p-12">
           <div className="relative z-10">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div className="flex-1">
@@ -50,6 +78,47 @@ export const DashboardPage = () => {
                     </p>
                   </div>
                 </div>
+                <div
+                  className="mt-4 flex flex-wrap gap-2 text-xs md:text-sm text-teal-900/80 dark:text-teal-100/80 animate-in fade-in-0 slide-in-from-bottom-2 duration-700"
+                  style={{ animationDelay: "150ms" }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => navigate("/ingest")}
+                    className="px-3 py-1 rounded-full border border-teal-200/60 dark:border-teal-700/60 bg-white/70 dark:bg-teal-900/40 hover:bg-white dark:hover:bg-teal-900/60 transition-colors"
+                  >
+                    <span className="font-medium">Step 1</span> · Ingest data
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/clusters")}
+                    className="px-3 py-1 rounded-full border border-teal-200/40 dark:border-teal-700/40 bg-white/50 dark:bg-teal-900/30 hover:bg-white dark:hover:bg-teal-900/50 transition-colors"
+                  >
+                    <span className="font-medium">Step 2</span> · Explore
+                    clusters
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/anomalies")}
+                    className="px-3 py-1 rounded-full border border-teal-200/40 dark:border-teal-700/40 bg-white/40 dark:bg-teal-900/20 hover:bg-white dark:hover:bg-teal-900/40 transition-colors"
+                  >
+                    <span className="font-medium">Step 3</span> · Monitor
+                    anomalies
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/insights")}
+                    className="px-3 py-1 rounded-full border border-teal-200/40 dark:border-teal-700/40 bg-white/30 dark:bg-teal-900/20 hover:bg-white dark:hover:bg-teal-900/40 transition-colors"
+                  >
+                    <span className="font-medium">Step 4</span> · Review
+                    insights
+                  </button>
+                </div>
+                {heroSummary && (
+                  <p className="mt-3 text-xs md:text-sm text-teal-900/70 dark:text-teal-100/70">
+                    {heroSummary}
+                  </p>
+                )}
                 <div
                   className="flex flex-wrap gap-2 mt-6 animate-in fade-in-0 slide-in-from-bottom-2 duration-700"
                   style={{ animationDelay: "200ms" }}
@@ -96,15 +165,9 @@ export const DashboardPage = () => {
               )}
             </div>
           </div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-teal-400/20 dark:bg-teal-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse" />
-          <div
-            className="absolute bottom-0 left-0 w-72 h-72 bg-blue-400/20 dark:bg-blue-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-pulse"
-            style={{ animationDelay: "1s" }}
-          />
-          <div
-            className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-400/15 dark:bg-indigo-500/8 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 animate-pulse"
-            style={{ animationDelay: "2s" }}
-          />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-teal-400/15 dark:bg-teal-500/8 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-400/15 dark:bg-blue-500/8 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-400/10 dark:bg-indigo-500/6 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         <div
@@ -125,7 +188,12 @@ export const DashboardPage = () => {
                 Highly Trending Clusters
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Topics with 90%+ trending score - the most active in your data
+                {trendingClusters.length > 0
+                  ? `Top ${Math.min(
+                      trendingClusters.length,
+                      3,
+                    )} topics are heating up right now.`
+                  : "Topics with 90%+ trending score - the most active in your data"}
               </p>
             </div>
             {!isLoading && data && data.clusters.length > 0 && (
@@ -157,7 +225,7 @@ export const DashboardPage = () => {
             <Card className="border-border/50">
               <CardContent className="p-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Failed to load clusters. Please try again later.
+                  Failed to load clusters: {getErrorMessage(error)}
                 </p>
               </CardContent>
             </Card>

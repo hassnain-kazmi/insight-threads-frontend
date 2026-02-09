@@ -26,7 +26,7 @@ export const ProgressRing = ({
     <div
       className={cn(
         "relative inline-flex items-center justify-center",
-        className
+        className,
       )}
     >
       <svg width={size} height={size} className="transform -rotate-90">

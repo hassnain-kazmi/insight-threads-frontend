@@ -41,13 +41,19 @@ import type {
   GitHubParams,
 } from "@/types/api";
 import { Rss, Github, Newspaper, Eye } from "lucide-react";
+import { toast } from "sonner";
 import { IngestStatusBadge } from "@/components/ingest/IngestStatusBadge";
 import {
   formatDistanceToNow,
   formatDuration,
   intervalToDuration,
 } from "date-fns";
-import { formatDateTime, getSourceDisplayName } from "@/lib/utils";
+import {
+  formatDateTime,
+  getSourceDisplayName,
+  getErrorMessage,
+} from "@/lib/utils";
+import { logError } from "@/lib/logger";
 import { RSSIngestForm } from "./RSSIngestForm";
 import { HackerNewsIngestForm } from "./HackerNewsIngestForm";
 import { GitHubIngestForm } from "./GitHubIngestForm";
@@ -115,16 +121,16 @@ const IngestEventDetailModalContent = ({ eventId }: { eventId: string }) => {
                         start: new Date(event.started_at),
                         end: new Date(event.completed_at),
                       }),
-                      { format: ["hours", "minutes", "seconds"] }
+                      { format: ["hours", "minutes", "seconds"] },
                     ) || "Less than a second"
-                  : event.status === "running" || event.status === "processing"
-                  ? `Running for ${formatDistanceToNow(
-                      new Date(event.started_at),
-                      {
-                        addSuffix: false,
-                      }
-                    )}`
-                  : "N/A"}
+                  : event.status === "running"
+                    ? `Running for ${formatDistanceToNow(
+                        new Date(event.started_at),
+                        {
+                          addSuffix: false,
+                        },
+                      )}`
+                    : "N/A"}
               </p>
             </div>
             <div>
@@ -156,10 +162,15 @@ const IngestEventDetailModalContent = ({ eventId }: { eventId: string }) => {
 
 const IngestEventsTable = () => {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const { data, isLoading, error } = useIngestEvents({
+  const { data, isLoading, error, refetch } = useIngestEvents({
     limit: 50,
     enableAutoRefresh: true,
   });
+
+  const hasActiveEvents =
+    data?.events.some(
+      (e) => e.status === "pending" || e.status === "running",
+    ) ?? false;
 
   if (isLoading) {
     return (
@@ -175,7 +186,22 @@ const IngestEventsTable = () => {
     );
   }
 
-  if (error || !data || data.events.length === 0) {
+  if (error) {
+    return (
+      <EmptyState
+        icon={Newspaper}
+        title="Failed to load ingestion events"
+        description={getErrorMessage(error)}
+        action={
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            Try again
+          </Button>
+        }
+      />
+    );
+  }
+
+  if (!data || data.events.length === 0) {
     return (
       <EmptyState
         icon={Newspaper}
@@ -187,6 +213,12 @@ const IngestEventsTable = () => {
 
   return (
     <>
+      {hasActiveEvents && (
+        <p className="mb-2 text-xs text-muted-foreground flex items-center gap-2">
+          <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          Live updating while ingestion jobs are active
+        </p>
+      )}
       <div className="border border-border rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
@@ -223,12 +255,11 @@ const IngestEventsTable = () => {
                           start: new Date(event.started_at),
                           end: new Date(event.completed_at),
                         }),
-                        { format: ["hours", "minutes"] }
+                        { format: ["hours", "minutes"] },
                       ) || "Less than a minute"
-                    : event.status === "running" ||
-                      event.status === "processing"
-                    ? `Running...`
-                    : "—"}
+                    : event.status === "running"
+                      ? "Running…"
+                      : "—"}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button
@@ -268,30 +299,21 @@ export const IngestPage = () => {
 
   const handleTrigger = async (
     source: IngestionSource,
-    params: RSSParams | HackerNewsParams | GitHubParams
+    params: RSSParams | HackerNewsParams | GitHubParams,
   ) => {
     try {
-      if (source === "github") {
-        const githubParams = params as GitHubParams;
-        if (!githubParams.repos || githubParams.repos.length === 0) {
-          return;
-        }
-        const invalidRepos = githubParams.repos.filter(
-          (r) =>
-            !r.owner || r.owner.length === 0 || !r.repo || r.repo.length === 0
-        );
-        if (invalidRepos.length > 0) {
-          return;
-        }
-      }
-
       await triggerMutation.mutateAsync({
         source,
         source_params: params,
       });
       setActiveSource("rss");
+      toast.success("Ingestion started", {
+        description: "You'll be notified when it completes.",
+      });
     } catch (error) {
-      console.error("Failed to trigger ingestion:", error);
+      const message = getErrorMessage(error);
+      logError("Failed to trigger ingestion", { source, message });
+      toast.error("Failed to trigger ingestion", { description: message });
     }
   };
 
@@ -415,8 +437,8 @@ export const IngestPage = () => {
                 <strong>Ingestion Workflow:</strong> After triggering an
                 ingestion, the job runs in the background. Status updates
                 automatically: <strong>Pending</strong> →{" "}
-                <strong>Processing</strong> → <strong>Running</strong> →{" "}
-                <strong>Completed</strong> or <strong>Failed</strong>.
+                <strong>Processing</strong> → <strong>Completed</strong> or{" "}
+                <strong>Failed</strong>.
               </p>
               <p className="mt-2 text-xs">
                 <strong>Processing Time:</strong> Ingestion duration depends on

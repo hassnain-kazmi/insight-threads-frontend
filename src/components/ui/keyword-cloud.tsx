@@ -54,7 +54,7 @@ export const KeywordCloud = ({
           variant={getVariant(index)}
           className={cn(
             "px-3 py-1.5 transition-all hover:scale-105 cursor-default",
-            getSize(keyword.weight)
+            getSize(keyword.weight),
           )}
         >
           {keyword.keyword}
@@ -63,4 +63,3 @@ export const KeywordCloud = ({
     </div>
   );
 };
-
