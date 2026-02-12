@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
-import {
-  Mail,
-  AlertCircle,
-  CheckCircle,
-  ArrowLeft,
-  Sparkles,
-} from "lucide-react";
+import { Mail, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react";
 
 export const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
@@ -69,8 +63,8 @@ export const ForgotPasswordPage = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="mb-4 flex justify-center text-teal-600 dark:text-teal-400">
-            <Sparkles className="w-12 h-12" strokeWidth={1.5} />
+          <div className="mb-4 flex justify-center">
+            <img src="/favicon.svg" alt="" className="w-12 h-12 rounded-lg" />
           </div>
           <h1 className="text-2xl font-semibold text-foreground">
             Reset password

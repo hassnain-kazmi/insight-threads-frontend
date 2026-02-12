@@ -10,7 +10,6 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -40,9 +39,11 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
     >
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-teal-600 dark:text-teal-400">
-            <Sparkles className="w-5 h-5" strokeWidth={1.75} />
-          </div>
+          <img
+            src="/favicon.svg"
+            alt=""
+            className="w-8 h-8 flex-shrink-0 rounded-lg"
+          />
           {!collapsed && (
             <span className="font-semibold text-sidebar-foreground whitespace-nowrap">
               InsightThreads
