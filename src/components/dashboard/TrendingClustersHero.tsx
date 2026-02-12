@@ -67,7 +67,7 @@ export const TrendingClustersHero = ({
       {trendingClusters.map((cluster, index) => {
         const trendingScore = cluster.trending_score ?? 0;
         const trendingPercent = Math.round(trendingScore * 100);
-        const displayName = getClusterDisplayName(cluster.id, []);
+        const displayName = getClusterDisplayName(cluster.id);
 
         return (
           <Card

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
 import { InfoNote } from "@/components/ui/info-note";
@@ -13,13 +14,24 @@ import { DEFAULT_PAGE_SIZE, DOCUMENTS_DISTRIBUTION_LIMIT } from "@/constants";
 import { Button } from "@/components/ui/button";
 
 export const DocumentsPage = () => {
-  const [filters, setFilters] = useState<DocumentFilters>({
+  const [searchParams, setSearchParams] = useSearchParams();
+  const documentIdFromUrl = searchParams.get("document_id");
+  const clusterIdFromUrl = searchParams.get("cluster_id");
+
+  const [filters, setFilters] = useState<DocumentFilters>(() => ({
     limit: DEFAULT_PAGE_SIZE,
     offset: 0,
-  });
+    cluster_id: clusterIdFromUrl || undefined,
+  }));
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
     null,
   );
+
+  useEffect(() => {
+    if (documentIdFromUrl) {
+      setSelectedDocumentId(documentIdFromUrl);
+    }
+  }, [documentIdFromUrl]);
 
   const { data: distributionData } = useDocuments({
     limit: DOCUMENTS_DISTRIBUTION_LIMIT,
@@ -107,7 +119,13 @@ export const DocumentsPage = () => {
 
         <DocumentDetailDrawer
           documentId={selectedDocumentId}
-          onClose={() => setSelectedDocumentId(null)}
+          onClose={() => {
+            setSelectedDocumentId(null);
+            if (documentIdFromUrl) {
+              searchParams.delete("document_id");
+              setSearchParams(searchParams, { replace: true });
+            }
+          }}
         />
       </div>
     </PageTransition>

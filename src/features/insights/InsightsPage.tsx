@@ -1,5 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
-import { useQueries } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Sparkles, Layers, Search } from "lucide-react";
 import { InsightList } from "@/components/insights/InsightList";
 import { PageTransition } from "@/components/ui/page-transition";
@@ -16,9 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useClusters } from "@/hooks/useClusters";
 import { useDebounce } from "@/hooks/useDebounce";
-import { queryKeys } from "@/hooks/queryKeys";
-import { apiClient } from "@/services/api";
-import type { ClusterDetailResponse } from "@/types/api";
 import { getClusterDisplayName } from "@/lib/utils";
 import { DEFAULT_PAGE_SIZE } from "@/constants";
 
@@ -31,25 +27,6 @@ export const InsightsPage = () => {
   const debouncedSearch = useDebounce(searchQuery);
   const limit = DEFAULT_PAGE_SIZE;
   const { data: clustersData } = useClusters();
-
-  const clusterDetailsQueries = useQueries({
-    queries: (clustersData?.clusters ?? []).map((cluster) => ({
-      queryKey: queryKeys.cluster(cluster.id),
-      queryFn: () =>
-        apiClient.get<ClusterDetailResponse>(`/clusters/${cluster.id}`),
-      enabled: !!cluster.id,
-    })),
-  });
-
-  const clusterNameMap = useMemo(() => {
-    if (!clustersData?.clusters) return {} as Record<string, string>;
-    const map: Record<string, string> = {};
-    clustersData.clusters.forEach((cluster, i) => {
-      const detail = clusterDetailsQueries[i]?.data;
-      map[cluster.id] = getClusterDisplayName(cluster.id, detail?.keywords);
-    });
-    return map;
-  }, [clustersData?.clusters, clusterDetailsQueries]);
 
   useEffect(() => {
     setOffset(0);
@@ -127,10 +104,7 @@ export const InsightsPage = () => {
                   <SelectItem key={cluster.id} value={cluster.id}>
                     <div className="flex items-center gap-2">
                       <Layers className="w-3.5 h-3.5" />
-                      <span>
-                        {clusterNameMap[cluster.id] ??
-                          getClusterDisplayName(cluster.id)}
-                      </span>
+                      <span>{getClusterDisplayName(cluster.id)}</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -143,8 +117,9 @@ export const InsightsPage = () => {
           clusterId={selectedClusterId}
           selectedClusterName={
             selectedClusterId
-              ? (clusterNameMap[selectedClusterId] ??
-                getClusterDisplayName(selectedClusterId))
+              ? clustersData?.clusters.find((c) => c.id === selectedClusterId)
+                ? getClusterDisplayName(selectedClusterId)
+                : getClusterDisplayName(selectedClusterId)
               : undefined
           }
           searchQuery={debouncedSearch}

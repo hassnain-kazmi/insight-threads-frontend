@@ -1,5 +1,6 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useCluster } from "@/hooks/useClusters";
+import { useDocuments } from "@/hooks/useDocuments";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
@@ -47,12 +48,26 @@ import {
   getMomentumLabel,
   getErrorMessage,
 } from "@/lib/utils";
+import { DEFAULT_PAGE_SIZE } from "@/constants";
 
 export const ClusterDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: cluster, isLoading, error } = useCluster(id || "");
   const [showKeywordWeights, setShowKeywordWeights] = useState(false);
+
+  const {
+    data: clusterDocuments,
+    isLoading: isDocumentsLoading,
+    error: documentsError,
+  } = useDocuments(
+    {
+      cluster_id: cluster?.id,
+      limit: DEFAULT_PAGE_SIZE,
+      offset: 0,
+    },
+    { enableAutoRefresh: false },
+  );
 
   const chartData = useMemo(() => {
     if (!cluster || cluster.timeseries.length === 0) return [];
@@ -494,6 +509,65 @@ export const ClusterDetailPage = () => {
                   ) : (
                     <p className="text-sm text-muted-foreground">
                       No keywords available
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card
+                className="animate-in fade-in-0 slide-in-from-bottom-4"
+                style={{ animationDelay: "200ms" }}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Documents in this cluster
+                    {clusterDocuments?.documents?.length ? (
+                      <Badge variant="secondary" className="ml-2">
+                        {clusterDocuments.documents.length}
+                      </Badge>
+                    ) : null}
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Documents currently assigned to this cluster. Click to open
+                    a document.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {isDocumentsLoading ? (
+                    <p className="text-sm text-muted-foreground">
+                      Loading documents for this cluster...
+                    </p>
+                  ) : documentsError ? (
+                    <p className="text-sm text-destructive">
+                      {getErrorMessage(documentsError)}
+                    </p>
+                  ) : clusterDocuments &&
+                    clusterDocuments.documents.length > 0 ? (
+                    <ul className="space-y-2 max-h-[320px] overflow-y-auto">
+                      {clusterDocuments.documents
+                        .slice()
+                        .sort(
+                          (a, b) =>
+                            new Date(b.created_at).getTime() -
+                            new Date(a.created_at).getTime(),
+                        )
+                        .map((doc) => (
+                          <li key={doc.id}>
+                            <Link
+                              to={`/documents?document_id=${doc.id}`}
+                              className="flex items-center justify-between gap-2 rounded-md py-2 px-2 -mx-2 hover:bg-muted/60 transition-colors group text-left"
+                            >
+                              <span className="text-sm text-foreground truncate flex-1 group-hover:text-primary">
+                                {doc.title?.trim() || "Untitled"}
+                              </span>
+                            </Link>
+                          </li>
+                        ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No documents in this cluster yet
                     </p>
                   )}
                 </CardContent>

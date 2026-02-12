@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { ClusterCard } from "@/components/clusters/ClusterCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,12 +12,14 @@ interface ClusterListProps {
   limit?: number;
   offset?: number;
   onPageChange?: (page: number) => void;
+  sortBy?: "trending" | "documents" | "sentiment";
 }
 
 export const ClusterList = ({
   limit = DEFAULT_PAGE_SIZE,
   offset = 0,
   onPageChange,
+  sortBy = "trending",
 }: ClusterListProps) => {
   const { data, isLoading, error } = useClusters();
 
@@ -86,13 +89,32 @@ export const ClusterList = ({
     );
   }
 
-  const total = data.clusters.length;
+  const sortedClusters = useMemo(() => {
+    const clusters = [...data.clusters];
+
+    if (sortBy === "documents") {
+      return clusters.sort((a, b) => b.document_count - a.document_count);
+    }
+
+    if (sortBy === "sentiment") {
+      return clusters.sort(
+        (a, b) =>
+          (b.avg_sentiment ?? -Infinity) - (a.avg_sentiment ?? -Infinity),
+      );
+    }
+
+    return clusters.sort(
+      (a, b) => (b.trending_score ?? 0) - (a.trending_score ?? 0),
+    );
+  }, [data.clusters, sortBy]);
+
+  const total = data.total ?? sortedClusters.length;
   const { currentPage, totalPages, startItem, endItem } = calculatePagination(
     offset,
     limit,
     total,
   );
-  const paginatedClusters = data.clusters.slice(offset, offset + limit);
+  const paginatedClusters = sortedClusters.slice(offset, offset + limit);
 
   return (
     <div className="space-y-4">
