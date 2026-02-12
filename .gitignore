@@ -1,0 +1,7 @@
+.cursor/
+docs/
+dist/
+node_modules/
+.vite/
+.env
+openapi.json
