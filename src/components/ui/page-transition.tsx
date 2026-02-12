@@ -15,11 +15,12 @@ export const PageTransition = ({
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    setIsVisible(false);
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, delay);
-    return () => clearTimeout(timer);
+    const timerReset = setTimeout(() => setIsVisible(false), 0);
+    const timerShow = setTimeout(() => setIsVisible(true), delay);
+    return () => {
+      clearTimeout(timerReset);
+      clearTimeout(timerShow);
+    };
   }, [location.pathname, delay]);
 
   return (

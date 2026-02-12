@@ -39,4 +39,5 @@ const Badge = ({ className, variant, ...props }: BadgeProps) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components -- badgeVariants shared by consumers
 export { Badge, badgeVariants };

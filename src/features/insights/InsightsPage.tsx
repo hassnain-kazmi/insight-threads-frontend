@@ -29,7 +29,8 @@ export const InsightsPage = () => {
   const { data: clustersData } = useClusters();
 
   useEffect(() => {
-    setOffset(0);
+    const id = setTimeout(() => setOffset(0), 0);
+    return () => clearTimeout(id);
   }, [selectedClusterId, debouncedSearch]);
 
   const handlePageChange = (newPage: number) => {
