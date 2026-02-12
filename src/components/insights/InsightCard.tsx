@@ -31,9 +31,10 @@ const getConfidenceColor = (
 
 export const InsightCard = ({ insight }: InsightCardProps) => {
   const { data: clusterDetail } = useCluster(insight.cluster_id);
-  const clusterDisplayName =
-    clusterDetail?.name?.trim() ||
-    getClusterDisplayName(insight.cluster_id, clusterDetail?.keywords);
+  const clusterDisplayName = getClusterDisplayName(
+    insight.cluster_id,
+    clusterDetail?.keywords,
+  );
   const confidenceInfo = getConfidenceColor(insight.confidence);
   const isHighConfidence =
     insight.confidence !== null && insight.confidence >= 0.8;

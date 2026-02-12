@@ -32,7 +32,8 @@ export const SearchPage = () => {
 
   useEffect(() => {
     if (!query.trim()) {
-      setSimilarityThreshold(undefined);
+      const id = setTimeout(() => setSimilarityThreshold(undefined), 0);
+      return () => clearTimeout(id);
     }
   }, [query]);
 

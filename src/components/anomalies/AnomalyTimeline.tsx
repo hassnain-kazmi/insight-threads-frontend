@@ -37,7 +37,7 @@ export const AnomalyTimeline = ({
         }
         data[key].count++;
         data[key].maxScore = Math.max(data[key].maxScore, anomaly.score);
-      } catch (error) {
+      } catch {
         return;
       }
     });
@@ -65,11 +65,12 @@ export const AnomalyTimeline = ({
   }, [anomalies, days]);
 
   useEffect(() => {
-    setAnimateIn(false);
-    const id = window.setTimeout(() => {
-      setAnimateIn(true);
-    }, 0);
-    return () => window.clearTimeout(id);
+    const idReset = window.setTimeout(() => setAnimateIn(false), 0);
+    const idShow = window.setTimeout(() => setAnimateIn(true), 20);
+    return () => {
+      window.clearTimeout(idReset);
+      window.clearTimeout(idShow);
+    };
   }, [timelineData.data]);
 
   const maxCount = timelineData.maxCount;

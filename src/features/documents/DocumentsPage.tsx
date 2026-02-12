@@ -28,9 +28,9 @@ export const DocumentsPage = () => {
   );
 
   useEffect(() => {
-    if (documentIdFromUrl) {
-      setSelectedDocumentId(documentIdFromUrl);
-    }
+    if (!documentIdFromUrl) return;
+    const id = setTimeout(() => setSelectedDocumentId(documentIdFromUrl), 0);
+    return () => clearTimeout(id);
   }, [documentIdFromUrl]);
 
   const { data: distributionData } = useDocuments({

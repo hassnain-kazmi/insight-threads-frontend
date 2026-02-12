@@ -81,7 +81,7 @@ export const ClusterDetailPage = () => {
         forecastUpper: ts.forecast_upper ?? null,
       }))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [cluster?.timeseries]);
+  }, [cluster]);
 
   const latestMomentum = useMemo(() => {
     if (!cluster || cluster.timeseries.length === 0) return null;
@@ -90,14 +90,14 @@ export const ClusterDetailPage = () => {
         new Date(b.summary_date).getTime() - new Date(a.summary_date).getTime(),
     );
     return sorted[0].momentum;
-  }, [cluster?.timeseries]);
+  }, [cluster]);
 
   const sortedKeywords = useMemo(() => {
     if (!cluster || cluster.keywords.length === 0) return [];
     return [...cluster.keywords].sort(
       (a, b) => (b.weight ?? 0) - (a.weight ?? 0),
     );
-  }, [cluster?.keywords]);
+  }, [cluster]);
 
   const momentumInfo = useMemo(() => {
     return getMomentumLabel(latestMomentum);

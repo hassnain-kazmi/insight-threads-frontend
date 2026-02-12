@@ -23,6 +23,22 @@ export const ClusterList = ({
 }: ClusterListProps) => {
   const { data, isLoading, error } = useClusters();
 
+  const sortedClusters = useMemo(() => {
+    const clusters = data?.clusters ?? [];
+    if (sortBy === "documents") {
+      return [...clusters].sort((a, b) => b.document_count - a.document_count);
+    }
+    if (sortBy === "sentiment") {
+      return [...clusters].sort(
+        (a, b) =>
+          (b.avg_sentiment ?? -Infinity) - (a.avg_sentiment ?? -Infinity),
+      );
+    }
+    return [...clusters].sort(
+      (a, b) => (b.trending_score ?? 0) - (a.trending_score ?? 0),
+    );
+  }, [data?.clusters, sortBy]);
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -88,25 +104,6 @@ export const ClusterList = ({
       </Card>
     );
   }
-
-  const sortedClusters = useMemo(() => {
-    const clusters = [...data.clusters];
-
-    if (sortBy === "documents") {
-      return clusters.sort((a, b) => b.document_count - a.document_count);
-    }
-
-    if (sortBy === "sentiment") {
-      return clusters.sort(
-        (a, b) =>
-          (b.avg_sentiment ?? -Infinity) - (a.avg_sentiment ?? -Infinity),
-      );
-    }
-
-    return clusters.sort(
-      (a, b) => (b.trending_score ?? 0) - (a.trending_score ?? 0),
-    );
-  }, [data.clusters, sortBy]);
 
   const total = data.total ?? sortedClusters.length;
   const { currentPage, totalPages, startItem, endItem } = calculatePagination(
