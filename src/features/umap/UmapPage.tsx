@@ -30,7 +30,7 @@ export const UmapPage = () => {
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
     null,
   );
-  const [limit, setLimit] = useState<number>(10000);
+  const [limit, setLimit] = useState<number>(1000);
   const [showGrid, setShowGrid] = useState(true);
   const [highlightedClusterId, setHighlightedClusterId] = useState<
     string | null
