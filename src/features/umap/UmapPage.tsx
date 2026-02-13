@@ -30,7 +30,7 @@ export const UmapPage = () => {
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
     null,
   );
-  const [limit, setLimit] = useState<number>(1000);
+  const [limit, setLimit] = useState<number>(10000);
   const [showGrid, setShowGrid] = useState(true);
   const [highlightedClusterId, setHighlightedClusterId] = useState<
     string | null
@@ -185,6 +185,7 @@ export const UmapPage = () => {
                     <SelectItem value="1000">1,000</SelectItem>
                     <SelectItem value="2500">2,500</SelectItem>
                     <SelectItem value="5000">5,000</SelectItem>
+                    <SelectItem value="10000">10,000</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
