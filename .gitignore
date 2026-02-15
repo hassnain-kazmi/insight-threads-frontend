@@ -1,5 +1,4 @@
 .cursor/
-docs/
 dist/
 node_modules/
 .vite/
