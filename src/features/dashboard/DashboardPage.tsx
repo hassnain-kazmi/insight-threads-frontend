@@ -2,7 +2,6 @@ import { StatsCards } from "@/components/dashboard/StatsCards";
 import { TrendingClustersHero } from "@/components/dashboard/TrendingClustersHero";
 import { RecentIngestions } from "@/components/dashboard/RecentIngestions";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageTransition } from "@/components/ui/page-transition";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -56,8 +55,7 @@ export const DashboardPage = () => {
   }, [data, ingestEventsData]);
 
   return (
-    <PageTransition delay={100}>
-      <div className="space-y-8">
+    <div className="space-y-8">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-50 via-blue-50 to-indigo-50 dark:from-teal-950/15 dark:via-blue-950/15 dark:to-indigo-950/15 border border-teal-200/50 dark:border-teal-800/50 p-8 md:p-12">
           <div className="relative z-10">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -268,6 +266,5 @@ export const DashboardPage = () => {
           <RecentIngestions />
         </div>
       </div>
-    </PageTransition>
   );
 };

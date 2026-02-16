@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
 import { InfoNote } from "@/components/ui/info-note";
 import { Input } from "@/components/ui/input";
@@ -40,8 +39,7 @@ export const SearchPage = () => {
   const hasActiveSearch = debouncedQuery.trim().length > 0;
 
   return (
-    <PageTransition>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <PageHeader
           title="Semantic Search"
           description="Search documents by meaning, not just keywords. Uses AI embeddings to find semantically similar content."
@@ -162,6 +160,5 @@ export const SearchPage = () => {
           onClose={() => setSelectedDocumentId(null)}
         />
       </div>
-    </PageTransition>
   );
 };
