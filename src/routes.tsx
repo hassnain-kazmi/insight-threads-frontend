@@ -1,6 +1,7 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { LandingPage } from "@/features/landing/LandingPage";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { SignupPage } from "@/features/auth/SignupPage";
 import { ForgotPasswordPage } from "@/features/auth/ForgotPasswordPage";
@@ -17,68 +18,78 @@ import { NotFoundPage } from "@/features/NotFoundPage";
 
 export const router = createBrowserRouter([
   {
-    path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/signup",
-    element: <SignupPage />,
-  },
-  {
-    path: "/forgot-password",
-    element: <ForgotPasswordPage />,
-  },
-  {
     path: "/",
-    element: (
-      <ProtectedRoute>
-        <MainLayout />
-      </ProtectedRoute>
-    ),
+    element: <Outlet />,
     children: [
       {
         index: true,
-        element: <Navigate to="/dashboard" replace />,
+        element: <LandingPage />,
       },
       {
-        path: "dashboard",
-        element: <DashboardPage />,
+        path: "login",
+        element: <LoginPage />,
       },
       {
-        path: "ingest",
-        element: <IngestPage />,
+        path: "signup",
+        element: <SignupPage />,
       },
       {
-        path: "documents",
-        element: <DocumentsPage />,
-      },
-      {
-        path: "clusters",
-        element: <ClustersPage />,
-      },
-      {
-        path: "clusters/:id",
-        element: <ClusterDetailPage />,
-      },
-      {
-        path: "insights",
-        element: <InsightsPage />,
-      },
-      {
-        path: "anomalies",
-        element: <AnomaliesPage />,
-      },
-      {
-        path: "umap",
-        element: <UmapPage />,
-      },
-      {
-        path: "search",
-        element: <SearchPage />,
+        path: "forgot-password",
+        element: <ForgotPasswordPage />,
       },
       {
         path: "*",
-        element: <NotFoundPage />,
+        element: (
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        ),
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/dashboard" replace />,
+          },
+          {
+            path: "dashboard",
+            element: <DashboardPage />,
+          },
+          {
+            path: "ingest",
+            element: <IngestPage />,
+          },
+          {
+            path: "documents",
+            element: <DocumentsPage />,
+          },
+          {
+            path: "clusters",
+            element: <ClustersPage />,
+          },
+          {
+            path: "clusters/:id",
+            element: <ClusterDetailPage />,
+          },
+          {
+            path: "insights",
+            element: <InsightsPage />,
+          },
+          {
+            path: "anomalies",
+            element: <AnomaliesPage />,
+          },
+          {
+            path: "umap",
+            element: <UmapPage />,
+          },
+          {
+            path: "search",
+            element: <SearchPage />,
+          },
+          {
+            path: "*",
+            element: <NotFoundPage />,
+          },
+        ],
       },
     ],
   },

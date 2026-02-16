@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { TrendingUp, Layers, Sparkles, BarChart3 } from "lucide-react";
 import { ClusterList } from "@/components/clusters/ClusterList";
-import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
 import { InfoNote } from "@/components/ui/info-note";
 import { useClusters } from "@/hooks/useClusters";
@@ -43,8 +42,7 @@ export const ClustersPage = () => {
   }, [sortBy]);
 
   return (
-    <PageTransition>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <PageHeader
           title="Clusters"
           description="Explore topic clusters organized by trending score"
@@ -81,7 +79,7 @@ export const ClustersPage = () => {
                 setSortBy(value as "trending" | "documents" | "sentiment")
               }
             >
-              <SelectTrigger className="h-8 w-[220px]">
+              <SelectTrigger className="min-h-[44px] h-auto w-full sm:w-[220px]">
                 <SelectValue placeholder="Sort clusters by" />
               </SelectTrigger>
               <SelectContent>
@@ -113,6 +111,5 @@ export const ClustersPage = () => {
           />
         </div>
       </div>
-    </PageTransition>
   );
 };

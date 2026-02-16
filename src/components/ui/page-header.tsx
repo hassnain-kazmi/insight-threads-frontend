@@ -38,7 +38,7 @@ export const PageHeader = ({
               </div>
             )}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 dark:from-teal-400 dark:to-blue-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 dark:from-teal-400 dark:to-blue-400 bg-clip-text text-transparent">
                 {title}
               </h1>
               {description && (
@@ -67,7 +67,9 @@ export const PageHeader = ({
             </div>
           )}
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
+              {title}
+            </h1>
             {description && (
               <p className="text-muted-foreground mt-1 text-sm">
                 {description}

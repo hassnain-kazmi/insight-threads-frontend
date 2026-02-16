@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Map, RotateCcw } from "lucide-react";
-import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
 import { InfoNote } from "@/components/ui/info-note";
 import { Button } from "@/components/ui/button";
@@ -67,8 +66,7 @@ export const UmapPage = () => {
   };
 
   return (
-    <PageTransition>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <PageHeader
           title="UMAP Visualization"
           description="Explore document embeddings in 2D space. Click on points to view document details."
@@ -312,6 +310,5 @@ export const UmapPage = () => {
           onClose={() => setSelectedDocumentId(null)}
         />
       </div>
-    </PageTransition>
   );
 };

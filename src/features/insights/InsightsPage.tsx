@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Sparkles, Layers, Search } from "lucide-react";
 import { InsightList } from "@/components/insights/InsightList";
-import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
 import { InfoNote } from "@/components/ui/info-note";
 import {
@@ -38,8 +37,7 @@ export const InsightsPage = () => {
   };
 
   return (
-    <PageTransition>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <PageHeader
           title="Insights"
           description="AI-generated insights from your document clusters"
@@ -129,6 +127,5 @@ export const InsightsPage = () => {
           onPageChange={handlePageChange}
         />
       </div>
-    </PageTransition>
   );
 };
