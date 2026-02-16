@@ -18,7 +18,7 @@ export const useIngestEventSourceMap = (options?: { limit?: number }) => {
   const sourceMap = useMemo(() => {
     const map = new Map<string, string | null>();
     data?.events.forEach((event) => {
-      if (event.id) map.set(event.id, event.source);
+      map.set(event.id, event.source);
     });
     return map;
   }, [data?.events]);

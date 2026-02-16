@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
 import { InfoNote } from "@/components/ui/info-note";
 import { DocumentFilters as DocumentFiltersComponent } from "@/components/documents/DocumentFilters";
@@ -46,8 +45,7 @@ export const DocumentsPage = () => {
   );
 
   return (
-    <PageTransition>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <PageHeader
           title="Documents"
           description="Browse and filter your ingested documents"
@@ -128,6 +126,5 @@ export const DocumentsPage = () => {
           }}
         />
       </div>
-    </PageTransition>
   );
 };

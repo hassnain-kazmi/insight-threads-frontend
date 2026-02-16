@@ -2,7 +2,6 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useCluster } from "@/hooks/useClusters";
 import { useDocuments } from "@/hooks/useDocuments";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -184,23 +183,21 @@ export const ClusterDetailPage = () => {
 
   if (error || !cluster) {
     return (
-      <PageTransition>
-        <div className="space-y-6">
-          <Button variant="outline" onClick={handleBackClick} className="gap-2">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Clusters
-          </Button>
-          <EmptyState
-            icon={Layers}
-            title="Cluster not found"
-            description={
-              error
-                ? getErrorMessage(error)
-                : "The requested cluster could not be found."
-            }
-          />
-        </div>
-      </PageTransition>
+      <div className="space-y-6">
+        <Button variant="outline" onClick={handleBackClick} className="gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Clusters
+        </Button>
+        <EmptyState
+          icon={Layers}
+          title="Cluster not found"
+          description={
+            error
+              ? getErrorMessage(error)
+              : "The requested cluster could not be found."
+          }
+        />
+      </div>
     );
   }
 
@@ -212,8 +209,7 @@ export const ClusterDetailPage = () => {
   } = getSentimentInfo(sentiment);
 
   return (
-    <PageTransition>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <Breadcrumb items={breadcrumbItems} />
         <PageHeader
           title={clusterDisplayName}
@@ -732,6 +728,5 @@ export const ClusterDetailPage = () => {
           </div>
         </TooltipProvider>
       </div>
-    </PageTransition>
   );
 };

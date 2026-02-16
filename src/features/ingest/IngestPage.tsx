@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
 import { InfoNote } from "@/components/ui/info-note";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -219,7 +218,7 @@ const IngestEventsTable = () => {
           Live updating while ingestion jobs are active
         </p>
       )}
-      <div className="border border-border rounded-xl overflow-hidden">
+      <div className="border border-border rounded-xl overflow-x-auto overflow-y-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -318,8 +317,7 @@ export const IngestPage = () => {
   };
 
   return (
-    <PageTransition>
-      <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in-0 duration-300">
         <PageHeader
           title="Ingestion Management"
           description="Configure and trigger data ingestion from various sources"
@@ -342,7 +340,7 @@ export const IngestPage = () => {
               }
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1">
                 <TabsTrigger value="rss" className="gap-2">
                   <Rss className="w-4 h-4" />
                   RSS Feeds
@@ -452,6 +450,5 @@ export const IngestPage = () => {
           </CardContent>
         </Card>
       </div>
-    </PageTransition>
   );
 };

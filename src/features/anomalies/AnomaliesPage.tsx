@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
-import { PageTransition } from "@/components/ui/page-transition";
 import { PageHeader } from "@/components/ui/page-header";
 import { InfoNote } from "@/components/ui/info-note";
 import { AnomalyFilters as AnomalyFiltersComponent } from "@/components/anomalies/AnomalyFilters";
@@ -31,8 +30,7 @@ export const AnomaliesPage = () => {
   };
 
   return (
-    <PageTransition>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <PageHeader
           title="Anomalies"
           description="Monitor detected anomalies in your data trends"
@@ -108,6 +106,5 @@ export const AnomaliesPage = () => {
           />
         </div>
       </div>
-    </PageTransition>
   );
 };
