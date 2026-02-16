@@ -43,17 +43,17 @@ export const LandingPage = () => {
           <div className="grid flex-1 min-h-0 gap-8 sm:gap-14 lg:gap-20 grid-cols-1 lg:grid-cols-[1.4fr_1fr] lg:items-stretch">
             <div className="flex flex-col text-left min-h-0 animate-in fade-in-0 slide-in-from-left-4 duration-500">
               <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl leading-tight">
-                Transform your data with
+                Turn noise into narratives with
                 <br />
                 <span className="text-primary text-3xl font-bold sm:text-4xl lg:text-5xl xl:text-[3rem] tracking-tight">
                   InsightThreads
                 </span>
               </h1>
               <p className="mt-4 sm:mt-5 text-sm text-muted-foreground max-w-xl leading-relaxed sm:text-[15px] lg:text-base">
-                The intelligent platform that ingests unstructured text from
-                RSS, Hacker News, and GitHub—then helps you cluster, analyze,
-                and visualize insights with topic analysis, sentiment, trends,
-                and AI-generated narratives.
+                An intelligent platform that ingests unstructured text from RSS,
+                Hacker News, and GitHub, then helps you cluster, analyze, and
+                visualize insights using topic analysis, sentiment detection,
+                trend tracking, and AI-generated narratives.
               </p>
 
               <ul
@@ -86,7 +86,7 @@ export const LandingPage = () => {
 
               <div className="mt-6 sm:mt-8 flex flex-wrap gap-3 sm:gap-4 justify-start">
                 <Link
-                  to="/signup"
+                  to="/register"
                   className="inline-flex items-center justify-center min-h-[44px] rounded-lg bg-primary px-5 py-3 sm:px-6 text-sm font-medium text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-sm"
                 >
                   Get Started

@@ -146,10 +146,10 @@ export const LoginPage = () => {
           <p className="text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
             <Link
-              to="/signup"
+              to="/register"
               className="font-medium text-foreground hover:underline"
             >
-              Sign up
+              Register
             </Link>
           </p>
         </div>

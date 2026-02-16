@@ -24,7 +24,7 @@ export const AuthNav = () => (
           Login
         </Link>
         <Link
-          to="/signup"
+          to="/register"
           className="inline-flex items-center justify-center min-h-[44px] rounded-lg bg-primary px-4 py-2.5 sm:px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 shadow-sm"
         >
           Register

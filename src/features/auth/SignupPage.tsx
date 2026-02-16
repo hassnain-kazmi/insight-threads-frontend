@@ -39,7 +39,7 @@ export const SignupPage = () => {
       await signUp(email, password, name);
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to sign up");
+      setError(err instanceof Error ? err.message : "Failed to register");
     } finally {
       setLoading(false);
     }
@@ -87,7 +87,7 @@ export const SignupPage = () => {
               <img src="/favicon.svg" alt="" className="w-12 h-12 rounded-lg" />
             </div>
             <h1 className="text-2xl font-semibold text-foreground">
-              Create an account
+              Register
             </h1>
             <p className="text-muted-foreground mt-1">
               Get started with InsightThreads
@@ -189,7 +189,7 @@ export const SignupPage = () => {
               ) : (
                 <>
                   <UserPlus className="w-4 h-4" />
-                  Create account
+                  Register
                 </>
               )}
             </button>
